@@ -1,0 +1,20 @@
+# Cloudflare configuration for this Pages project.
+# "." means the static site root (index.html, styles.css) is this
+# same folder — there's no build step, so nothing needs bundling.
+name = "nora-callahan-portfolio"
+compatibility_date = "2024-01-01"
+pages_build_output_dir = "."
+
+# Workers AI binding — lets functions/api/ask.js call env.AI.run(...).
+# If this doesn't pick up automatically on deploy, add it manually in
+# the dashboard instead: Pages project -> Settings -> Bindings ->
+# Add -> Workers AI -> variable name "AI". See README.md.
+[ai]
+binding = "AI"
+
+# TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are NOT set here on purpose —
+# secrets shouldn't live in a checked-in config file. Set them as
+# encrypted environment variables in the dashboard, or with:
+#   npx wrangler pages secret put TELEGRAM_BOT_TOKEN
+#   npx wrangler pages secret put TELEGRAM_CHAT_ID
+# See README.md for the full walkthrough.
