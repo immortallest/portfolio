@@ -1,9 +1,10 @@
+[Uploading README.md…]()
 # Nora Callahan — Data Analyst Portfolio
 
 A portfolio site built to the spec in `Vision.md`: pure HTML/CSS on the
-frontend (no client-side JavaScript, anywhere) and a Cloudflare Pages
-Function (a Worker) on the backend for the AI chat and Telegram
-notifications.
+frontend (no client-side JavaScript, anywhere) and a single Cloudflare
+Worker on the backend for the AI chat and Telegram notifications,
+serving the static site via Workers Static Assets.
 
 All the personal content in here — the name, bio, FAQ answers, and all
 eight projects — is realistic **placeholder** content for you to
@@ -14,19 +15,27 @@ replace. Nothing here is real client work.
 ## 1. Project structure
 
 ```
-index.html                   the whole site — one page
-styles.css                   all styling and every interaction's CSS
-functions/
-  api/
-    ask.js                   POST /api/ask — handles the chat form
-  _context.js                EDIT THIS: what the AI knows about you
-  _telegram.js                Telegram notification helper
-  _render.js                  splices the chat answer into a copy of index.html
-wrangler.toml                 Cloudflare config (Workers AI binding, etc.)
+public/
+  index.html                 the whole site — one page
+  styles.css                 all styling and every interaction's CSS
+src/
+  index.js                   Worker entry point — routes /api/ask, everything else falls through to the static files
+  ask-handler.js             handles the chat form submission
+  context.js                 EDIT THIS: what the AI knows about you
+  telegram.js                Telegram notification helper
+  render.js                  splices the chat answer into a copy of index.html
+wrangler.toml                 Cloudflare config (entry point, assets folder, AI binding)
+package.json
 ```
 
-Anything in `functions/` starting with `_` is a shared module, not a
-route — Cloudflare Pages only turns non-underscore files into URLs.
+**A note on Cloudflare Pages vs. Workers:** this was originally built
+against Cloudflare Pages Functions, but Cloudflare has been folding
+Pages into a unified **Workers + Static Assets** model, and that's
+what this project now targets — a single Worker (`src/index.js`) that
+serves `public/` as static files and only runs code for the one
+dynamic route, `/api/ask`. If your Cloudflare dashboard project runs
+`wrangler deploy` (not `wrangler pages deploy`), this is the right
+model for it.
 
 ## 2. How the interactivity works with zero JavaScript
 
@@ -35,7 +44,7 @@ category filtering, and the project detail view — is built from native
 HTML controls (`<details>`, radio buttons) combined with the modern
 CSS `:has()` selector, which lets an element react to a descendant's
 state. There's a full explanation of the mechanism at the top of
-`styles.css`, and inline comments at each `:has()` rule.
+`public/styles.css`, and inline comments at each `:has()` rule.
 
 The one deliberately-documented limitation: the live chat-preview panel
 opens as soon as you focus the question field (via `:focus`), and if
@@ -50,15 +59,23 @@ limitation.
 
 You'll need a free Cloudflare account.
 
-1. **Push this folder to a GitHub repo** (or use direct upload — see
-   step 2's alternative).
-2. In the Cloudflare dashboard: **Workers & Pages → Create → Pages →
-   Connect to Git**, pick the repo. Build settings: no build command,
-   output directory `/` (this is a static site with no build step).
-   - *Alternative without Git:* `npx wrangler pages deploy .` from
-     this folder deploys directly from your machine.
-3. Cloudflare will detect the `functions/` folder automatically and
-   deploy it as Pages Functions — no extra step needed for that part.
+**From the command line (simplest):**
+
+```
+npm install
+npx wrangler deploy
+```
+
+The first time, Wrangler will prompt you to log in. This uploads
+`public/` as static assets and deploys `src/index.js` as the Worker
+that runs alongside them, on a `<name>.<your-subdomain>.workers.dev`
+URL (or connect a custom domain afterward in the dashboard).
+
+**From a Git-connected dashboard project:** if your Cloudflare project
+already runs a deploy command (as in your build log), just make sure
+it's `npx wrangler deploy` — that's what this config is built for.
+Push this project's files (including `wrangler.toml` and `src/`) to
+the connected repo and it should pick this up on the next deploy.
 
 ## 4. Connecting Workers AI (for the chat to actually answer)
 
@@ -66,10 +83,10 @@ You'll need a free Cloudflare account.
 automatically on deploy. If the chat responds with the "AI chat isn't
 connected yet" fallback message, add it manually:
 
-**Pages project → Settings → Bindings → Add → Workers AI**, variable
-name `AI`. Redeploy.
+**Worker → Settings → Bindings → Add → Workers AI**, variable name
+`AI`. Redeploy.
 
-The model used is set in `functions/api/ask.js`
+The model used is set in `src/ask-handler.js`
 (`@cf/meta/llama-3.1-8b-instruct-fast` at the time of writing — a
 small, fast instruct model well suited to short FAQ answers). Browse
 **Workers AI → Models** in the dashboard for other options and swap
@@ -84,26 +101,26 @@ Workers AI page if you expect meaningful traffic.
 2. Send your new bot any message (it can't message you first).
 3. Visit `https://api.telegram.org/bot<YOUR_TOKEN>/getUpdates` in a
    browser — your chat id is the number at `result[0].message.chat.id`.
-4. In the Cloudflare dashboard: **Pages project → Settings →
-   Environment variables**, add two **secret** (encrypted) variables:
+4. In the Cloudflare dashboard: **Worker → Settings → Variables and
+   Secrets**, add two **secret** (encrypted) variables:
    - `TELEGRAM_BOT_TOKEN`
    - `TELEGRAM_CHAT_ID`
-   Or via CLI: `npx wrangler pages secret put TELEGRAM_BOT_TOKEN`.
+   Or via CLI: `npx wrangler secret put TELEGRAM_BOT_TOKEN`.
 5. Redeploy. Until these are set, the site works fine — it just skips
-   sending the notification (see `functions/_telegram.js`).
+   sending the notification (see `src/telegram.js`).
 
 ## 6. Editing content
 
 - **Name, title, bio, FAQ, contact links:** edit directly in
-  `index.html` — it's plain, readable markup, organized into the three
-  strips with comments marking each section.
-- **What the AI chat knows about you:** edit `functions/_context.js`.
-  This is separate from the visible FAQ text because it's what gets
-  fed to the model as background — update it with real specifics
-  (experience, policies, tone) for better answers.
+  `public/index.html` — it's plain, readable markup, organized into
+  the three strips with comments marking each section.
+- **What the AI chat knows about you:** edit `src/context.js`. This is
+  separate from the visible FAQ text because it's what gets fed to the
+  model as background — update it with real specifics (experience,
+  policies, tone) for better answers.
 - **Contact links:** the four icons at the bottom of the info strip
   currently point to placeholder URLs (`replace-with-your-username`,
-  etc.) — search `index.html` for `replace` to find all of them.
+  etc.) — search `public/index.html` for `replace` to find all of them.
 
 ## 7. Adding a 9th (or more) project
 
@@ -111,20 +128,21 @@ Projects intentionally don't reflow or resize as you add more — the
 grid stays a fixed 2-column × 4-row frame and scrolls internally past
 that, per the design brief. To add one:
 
-1. In `index.html`, copy one `<label class="project-card">…</label>`
-   block, give its radio a new id (`project-9`), and update `data-cat`.
+1. In `public/index.html`, copy one
+   `<label class="project-card">…</label>` block, give its radio a new
+   id (`project-9`), and update `data-cat`.
 2. Copy one `<div class="detail-panel" id="detail-N">…</div>` block,
    change its id to `detail-9` and its close radio's id to `close-9`.
-3. In `styles.css`, add `#project-9:checked) #detail-9` (desktop rule)
-   and the matching line in the mobile media query — both spots are
-   marked with a comment where the existing eight are listed.
+3. In `public/styles.css`, add `#project-9:checked) #detail-9` (desktop
+   rule) and the matching line in the mobile media query — both spots
+   are marked with a comment where the existing eight are listed.
 
 ## 8. Downloads
 
 The "Download Raw Data" / "Download Processed Data" buttons on each
 project's detail view link to `/downloads/0N-raw-data.csv` and
-`/downloads/0N-processed-data.csv`. Add real files at those paths (a
-`downloads/` folder at the project root) before pointing clients at
+`/downloads/0N-processed-data.csv`. Add real files at those paths
+(a `downloads/` folder inside `public/`) before pointing clients at
 the live site — right now they're placeholder links.
 
 ## 9. Possible future enhancements
