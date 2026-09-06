@@ -1,5 +1,5 @@
 /**
- * _telegram.js
+ * src/telegram.js
  * ----------------------------------------------------------------------
  * Sends each question/answer pair to a Telegram chat via the Bot API,
  * so you see every question asked on the site in real time.
@@ -9,8 +9,8 @@
  *   2. Message your new bot once (anything), then visit
  *      https://api.telegram.org/bot<TOKEN>/getUpdates to find your
  *      chat id in the JSON response.
- *   3. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID as Cloudflare Pages
- *      secrets (Pages project -> Settings -> Environment variables).
+ *   3. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID as Cloudflare Worker
+ *      secrets (Worker -> Settings -> Variables and Secrets).
  *
  * This is intentionally fire-and-forget: a Telegram outage should
  * never block or break an answer being shown on the site.
