@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nora Callahan — Data Analyst</title>
+<meta name="description" content="Data analyst portfolio — Excel, Python, SQL, and Power BI work for clients who need clear, decision-ready numbers.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23123423'/%3E%3Cpath d='M6 9h12M6 13h12M6 17h8' stroke='%23bfe3cd' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main-projects">Skip to projects</a>
+
+<!-- ============================================================
+     ICON SPRITE
+     All icons are small original geometric marks (not brand logos),
+     defined once and reused with <use> throughout the page.
+     ============================================================ -->
+<svg class="icon-sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="icon-excel" viewBox="0 0 24 24">
+      <rect width="24" height="24" rx="6" fill="#1e6b45"/>
+      <rect x="5.5" y="5.5" width="13" height="13" rx="1.6" fill="none" stroke="#eafbf1" stroke-width="1.4"/>
+      <path d="M5.5 10.8h13M5.5 14.8h13M10.7 5.5v13M14.8 5.5v13" stroke="#eafbf1" stroke-width="1.1"/>
+    </symbol>
+    <symbol id="icon-python" viewBox="0 0 24 24">
+      <rect width="24" height="24" rx="6" fill="#2c5c86"/>
+      <path d="M9.4 7.6 5.6 12l3.8 4.4M14.6 7.6l3.8 4.4-3.8 4.4" fill="none" stroke="#f2d477" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="icon-sql" viewBox="0 0 24 24">
+      <rect width="24" height="24" rx="6" fill="#1f5c6b"/>
+      <ellipse cx="12" cy="8" rx="5.4" ry="2" fill="none" stroke="#e7fbff" stroke-width="1.3"/>
+      <path d="M6.6 8v8c0 1.1 2.4 2 5.4 2s5.4-.9 5.4-2V8M6.6 12c0 1.1 2.4 2 5.4 2s5.4-.9 5.4-2" fill="none" stroke="#e7fbff" stroke-width="1.3"/>
+    </symbol>
+    <symbol id="icon-powerbi" viewBox="0 0 24 24">
+      <rect width="24" height="24" rx="6" fill="#96631c"/>
+      <g fill="#fdf1d8">
+        <rect x="6" y="13" width="3" height="5" rx="0.8"/>
+        <rect x="10.5" y="9.3" width="3" height="8.7" rx="0.8"/>
+        <rect x="15" y="5.8" width="3" height="12.2" rx="0.8"/>
+      </g>
+    </symbol>
+    <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-arrow-up" viewBox="0 0 24 24"><path d="M12 19V6M6.5 11.5 12 6l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-send" viewBox="0 0 24 24"><path d="M4 12.2 19.5 5 13 19.5l-2.6-6.6L4 12.2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-telegram" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9.4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M7.2 12.4l9.6-4.3-3.5 9.5-2.1-3.5-3.4-1Z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="icon-profile" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9.4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <circle cx="12" cy="9.8" r="2.9" fill="none" stroke="currentColor" stroke-width="1.3"/>
+      <path d="M6.6 17.8c1-2.3 2.9-3.3 5.4-3.3s4.4 1 5.4 3.3" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="icon-code" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9.4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M9.6 9.2l-2.7 2.8 2.7 2.8M14.4 9.2l2.7 2.8-2.7 2.8" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="icon-mail" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9.4" fill="none" stroke="currentColor" stroke-width="1.5"/>
+      <rect x="6.6" y="8.7" width="10.8" height="7.2" rx="1.1" fill="none" stroke="currentColor" stroke-width="1.2"/>
+      <path d="M6.8 9.2l5.2 3.8 5.2-3.8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 11l4.5 4.5L16.5 11M5 19.5h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+
+  <!-- ============================================================
+       1. QUESTION STRIP — FAQ + AI chat
+       ============================================================ -->
+  <section class="strip question-strip" aria-label="Frequently asked questions and chat">
+
+    <div class="question-strip__faq-collapse">
+      <div class="question-strip__faq-inner">
+
+        <h2 class="faq-heading">FAQ</h2>
+
+        <div class="faq-list">
+
+          <details class="faq-item">
+            <summary>
+              <span>What kind of projects do you take on?</span>
+              <svg class="chevron" width="18" height="18"><use href="#icon-chevron"/></svg>
+            </summary>
+            <div class="faq-answer">
+              <p>Most of my work falls into three buckets: cleaning up messy data so it's actually usable, building dashboards and reports that answer a specific business question, and automating the manual spreadsheet work that eats up a team's week. If you're not sure your project fits, ask below — happy to take a look.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary>
+              <span>Which tools do you work with?</span>
+              <svg class="chevron" width="18" height="18"><use href="#icon-chevron"/></svg>
+            </summary>
+            <div class="faq-answer">
+              <p>Day to day, mostly Excel, Python, SQL, and Power BI. I pick the tool based on the problem rather than forcing everything through one system — a quick answer might live in a spreadsheet, while a recurring report is usually worth automating.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary>
+              <span>How do you handle sensitive or confidential data?</span>
+              <svg class="chevron" width="18" height="18"><use href="#icon-chevron"/></svg>
+            </summary>
+            <div class="faq-answer">
+              <p>I'm happy to sign an NDA before any data changes hands, and I work with anonymized or sample data wherever that's practical. Raw client data stays out of anything public, including the examples shown here.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary>
+              <span>How long does a typical project take?</span>
+              <svg class="chevron" width="18" height="18"><use href="#icon-chevron"/></svg>
+            </summary>
+            <div class="faq-answer">
+              <p>A focused dashboard or cleanup usually takes one to two weeks; larger reporting builds or ongoing analysis can run longer. I'll give you a real estimate once I understand the scope — it's usually one of the first things we sort out.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary>
+              <span>How do we get started?</span>
+              <svg class="chevron" width="18" height="18"><use href="#icon-chevron"/></svg>
+            </summary>
+            <div class="faq-answer">
+              <p>Send a message below with a bit about what you're trying to solve, or reach out directly through the links in the sidebar. I typically reply within a business day.</p>
+            </div>
+          </details>
+
+        </div>
+
+        <p class="faq-more">Have more questions?</p>
+      </div>
+    </div>
+
+    <div class="question-strip__divider" role="separator" aria-hidden="true"></div>
+
+    <div class="question-strip__chat">
+
+      <!--
+        #mode-chat has no visible control of its own — a person never clicks it
+        directly. It exists purely so the Cloudflare Worker can mark it
+        `checked` when it re-renders this page after answering a question,
+        which keeps the chat panel open after a full-page form submit
+        (see README "How the no-JS chat state works").
+      -->
+      <input type="radio" name="chat-mode" id="mode-chat" class="sr-only-input" tabindex="-1" aria-hidden="true">
+
+      <div class="chat-panel">
+        <label class="return-to-faq" aria-label="Return to FAQ">
+          <input type="radio" name="chat-mode" id="mode-faq" class="sr-only-input">
+          <svg width="18" height="18"><use href="#icon-arrow-up"/></svg>
+        </label>
+
+        <div class="chat-log" id="chat-log">
+          <div class="chat-bubble chat-bubble--assistant">
+            <p>Hi. Ask me anything, and I'll answer right away.</p>
+          </div>
+          <!--CHAT_LOG_END-->
+        </div>
+      </div>
+
+      <form class="chat-form" action="/api/ask" method="POST">
+        <label class="sr-only" for="chat-input">Ask a question</label>
+        <input type="text" name="question" id="chat-input" placeholder="Ask anything…" autocomplete="off" required maxlength="400">
+        <button type="submit" class="chat-send" aria-label="Send question">
+          <svg width="18" height="18"><use href="#icon-send"/></svg>
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       2. CARD STRIP — projects
+       ============================================================ -->
+  <section class="strip card-strip" id="main-projects" aria-label="Projects">
+
+    <div class="card-strip__toolbar">
+      <fieldset class="filter-group">
+        <legend class="sr-only">Filter projects by category</legend>
+
+        <label class="filter-pill filter-pill--excel">
+          <input type="radio" name="category-filter" id="filter-excel" class="sr-only-input">
+          <svg width="16" height="16"><use href="#icon-excel"/></svg> Excel
+        </label>
+        <label class="filter-pill filter-pill--python">
+          <input type="radio" name="category-filter" id="filter-python" class="sr-only-input">
+          <svg width="16" height="16"><use href="#icon-python"/></svg> Python
+        </label>
+        <label class="filter-pill filter-pill--sql">
+          <input type="radio" name="category-filter" id="filter-sql" class="sr-only-input">
+          <svg width="16" height="16"><use href="#icon-sql"/></svg> SQL
+        </label>
+        <label class="filter-pill filter-pill--powerbi">
+          <input type="radio" name="category-filter" id="filter-powerbi" class="sr-only-input">
+          <svg width="16" height="16"><use href="#icon-powerbi"/></svg> Power BI
+        </label>
+
+        <label class="clear-filter-btn">
+          <input type="radio" name="category-filter" id="filter-clear" class="sr-only-input">
+          <svg width="14" height="14"><use href="#icon-close"/></svg> Clear filter
+        </label>
+      </fieldset>
+    </div>
+
+    <div class="card-grid">
+
+      <!-- Project 1 -->
+      <label class="project-card" data-cat="excel powerbi">
+        <input type="radio" name="project-select" id="project-1" class="project-radio">
+        <span class="project-card__check" aria-hidden="true"><svg width="12" height="12"><use href="#icon-check"/></svg></span>
+        <span class="project-card__icons">
+          <svg width="22" height="22"><use href="#icon-excel"/></svg>
+          <svg width="22" height="22"><use href="#icon-powerbi"/></svg>
+        </span>
+        <h3 class="project-card__name">Regional Sales Performance Dashboard</h3>
+        <p class="project-card__desc">An interactive dashboard tracking revenue, margin, and rep performance across five sales regions.</p>
+        <span class="project-card__tags">
+          <label for="filter-excel" class="tag tag--excel">Excel</label>
+          <label for="filter-powerbi" class="tag tag--powerbi">Power BI</label>
+        </span>
+      </label>
+
+      <!-- Project 2 -->
+      <label class="project-card" data-cat="python sql">
+        <input type="radio" name="project-select" id="project-2" class="project-radio">
+        <span class="project-card__check" aria-hidden="true"><svg width="12" height="12"><use href="#icon-check"/></svg></span>
+        <span class="project-card__icons">
+          <svg width="22" height="22"><use href="#icon-python"/></svg>
+          <svg width="22" height="22"><use href="#icon-sql"/></svg>
+        </span>
+        <h3 class="project-card__name">Customer Churn Risk Model</h3>
+        <p class="project-card__desc">A churn-prediction model that flags at-risk subscribers before they cancel.</p>
+        <span class="project-card__tags">
+          <label for="filter-python" class="tag tag--python">Python</label>
+          <label for="filter-sql" class="tag tag--sql">SQL</label>
+        </span>
+      </label>
+
+      <!-- Project 3 -->
+      <label class="project-card" data-cat="excel sql">
+        <input type="radio" name="project-select" id="project-3" class="project-radio">
+        <span class="project-card__check" aria-hidden="true"><svg width="12" height="12"><use href="#icon-check"/></svg></span>
+        <span class="project-card__icons">
+          <svg width="22" height="22"><use href="#icon-excel"/></svg>
+          <svg width="22" height="22"><use href="#icon-sql"/></svg>
+        </span>
+        <h3 class="project-card__name">Marketing Campaign ROI Tracker</h3>
+        <p class="project-card__desc">A campaign-by-campaign breakdown of spend, conversions, and return on ad spend.</p>
+        <span class="project-card__tags">
+          <label for="filter-excel" class="tag tag--excel">Excel</label>
+          <label for="filter-sql" class="tag tag--sql">SQL</label>
+        </span>
+      </label>
+
+      <!-- Project 4 -->
+      <label class="project-card" data-cat="python excel">
+        <input type="radio" name="project-select" id="project-4" class="project-radio">
+        <span class="project-card__check" aria-hidden="true"><svg width="12" height="12"><use href="#icon-check"/></svg></span>
+        <span class="project-card__icons">
+          <svg width="22" height="22"><use href="#icon-python"/></svg>
+          <svg width="22" height="22"><use href="#icon-excel"/></svg>
+        </span>
+        <h3 class="project-card__name">Inventory Demand Forecast</h3>
+        <p class="project-card__desc">A demand-forecasting model that reduced stockouts for a seasonal product line.</p>
+        <span class="project-card__tags">
+          <label for="filter-python" class="tag tag--python">Python</label>
+          <label for="filter-excel" class="tag tag--excel">Excel</label>
+        </span>
+      </label>
+
+      <!-- Project 5 -->
+      <label class="project-card" data-cat="sql powerbi">
+        <input type="radio" name="project-select" id="project-5" class="project-radio">
+        <span class="project-card__check" aria-hidden="true"><svg width="12" height="12"><use href="#icon-check"/></svg></span>
+        <span class="project-card__icons">
+          <svg width="22" height="22"><use href="#icon-sql"/></svg>
+          <svg width="22" height="22"><use href="#icon-powerbi"/></svg>
+        </span>
+        <h3 class="project-card__name">Automated Monthly Finance Report</h3>
+        <p class="project-card__desc">A finance report that rebuilds itself from source data instead of a manual copy-paste routine.</p>
+        <span class="project-card__tags">
+          <label for="filter-sql" class="tag tag--sql">SQL</label>
+          <label for="filter-powerbi" class="tag tag--powerbi">Power BI</label>
+        </span>
+      </label>
+
+      <!-- Project 6 -->
+      <label class="project-card" data-cat="python powerbi">
+        <input type="radio" name="project-select" id="project-6" class="project-radio">
+        <span class="project-card__check" aria-hidden="true"><svg width="12" height="12"><use href="#icon-check"/></svg></span>
+        <span class="project-card__icons">
+          <svg width="22" height="22"><use href="#icon-python"/></svg>
+          <svg width="22" height="22"><use href="#icon-powerbi"/></svg>
+        </span>
+        <h3 class="project-card__name">Website Funnel Analysis</h3>
+        <p class="project-card__desc">A funnel breakdown identifying exactly where visitors were dropping off before checkout.</p>
+        <span class="project-card__tags">
+          <label for="filter-python" class="tag tag--python">Python</label>
+          <label for="filter-powerbi" class="tag tag--powerbi">Power BI</label>
+        </span>
+      </label>
+
+      <!-- Project 7 -->
+      <label class="project-card" data-cat="sql python">
+        <input type="radio" name="project-select" id="project-7" class="project-radio">
+        <span class="project-card__check" aria-hidden="true"><svg width="12" height="12"><use href="#icon-check"/></svg></span>
+        <span class="project-card__icons">
+          <svg width="22" height="22"><use href="#icon-sql"/></svg>
+          <svg width="22" height="22"><use href="#icon-python"/></svg>
+        </span>
+        <h3 class="project-card__name">Employee Attrition Study</h3>
+        <p class="project-card__desc">An analysis of HR data uncovering the strongest predictors of early employee turnover.</p>
+        <span class="project-card__tags">
+          <label for="filter-sql" class="tag tag--sql">SQL</label>
+          <label for="filter-python" class="tag tag--python">Python</label>
+        </span>
+      </label>
+
+      <!-- Project 8 -->
+      <label class="project-card" data-cat="excel powerbi">
+        <input type="radio" name="project-select" id="project-8" class="project-radio">
+        <span class="project-card__check" aria-hidden="true"><svg width="12" height="12"><use href="#icon-check"/></svg></span>
+        <span class="project-card__icons">
+          <svg width="22" height="22"><use href="#icon-excel"/></svg>
+          <svg width="22" height="22"><use href="#icon-powerbi"/></svg>
+        </span>
+        <h3 class="project-card__name">Supply Chain KPI Tracker</h3>
+        <p class="project-card__desc">A live KPI tracker covering on-time delivery, lead time, and supplier performance.</p>
+        <span class="project-card__tags">
+          <label for="filter-excel" class="tag tag--excel">Excel</label>
+          <label for="filter-powerbi" class="tag tag--powerbi">Power BI</label>
+        </span>
+      </label>
+
+      <!--
+        To add project 9+: copy one <label class="project-card"> block,
+        give the radio input a new unique id (e.g. "project-9"), update
+        data-cat, and add a matching <div class="detail-panel" id="detail-9">
+        block below. Cards keep their fixed size automatically — the grid
+        never stretches or reflows around the count (see README).
+      -->
+    </div>
+  </section>
+
+  <!-- ============================================================
+       3. INFO STRIP — about
+       ============================================================ -->
+  <section class="strip info-strip" aria-label="About me">
+
+    <div class="info-strip__profile">
+      <div class="profile-photo" aria-hidden="true">
+        <svg width="34" height="34"><use href="#icon-profile"/></svg>
+      </div>
+      <div class="profile-heading">
+        <h1 class="profile-name">Nora Callahan</h1>
+        <p class="profile-title">Data Analyst</p>
+      </div>
+    </div>
+
+    <div class="info-strip__bio">
+      <p>I'm a data analyst who likes turning messy spreadsheets into decisions people can actually act on. Over the past several years I've worked with small businesses and growing teams to build reporting systems, clean up inconsistent data, and surface the numbers that matter most.</p>
+      <p>My toolkit centers on Excel, Python, SQL, and Power BI — whichever fits the problem best. I care most about clarity: a dashboard nobody understands is worse than no dashboard at all.</p>
+    </div>
+
+    <div class="info-strip__contact">
+      <div class="divider" role="separator" aria-hidden="true"></div>
+      <p class="contact-label">Contact me</p>
+      <div class="contact-icons">
+        <a href="https://t.me/replace-with-your-username" class="contact-icon" aria-label="Telegram" target="_blank" rel="noopener noreferrer">
+          <svg width="20" height="20"><use href="#icon-telegram"/></svg>
+        </a>
+        <a href="https://www.linkedin.com/in/replace-with-your-profile" class="contact-icon" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
+          <svg width="20" height="20"><use href="#icon-profile"/></svg>
+        </a>
+        <a href="https://github.com/replace-with-your-username" class="contact-icon" aria-label="GitHub" target="_blank" rel="noopener noreferrer">
+          <svg width="20" height="20"><use href="#icon-code"/></svg>
+        </a>
+        <a href="mailto:replace@example.com" class="contact-icon" aria-label="Email">
+          <svg width="20" height="20"><use href="#icon-mail"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       PROJECT DETAIL PANELS
+       Structurally separate from the cards above. Shown via
+       `.app:has(#project-N:checked) #detail-N`, see styles.css.
+       ============================================================ -->
+  <div class="detail-panels" aria-hidden="false">
+
+    <!-- Detail 1 -->
+    <div class="detail-panel" id="detail-1">
+      <div class="detail-panel__inner">
+        <header class="detail-panel__header">
+          <label class="detail-panel__close" aria-label="Close project details">
+            <input type="radio" name="project-select" id="close-1" class="sr-only-input">
+            <svg width="16" height="16"><use href="#icon-close"/></svg>
+          </label>
+          <span class="detail-panel__icons">
+            <svg width="26" height="26"><use href="#icon-excel"/></svg>
+            <svg width="26" height="26"><use href="#icon-powerbi"/></svg>
+          </span>
+          <h2 class="detail-panel__title">Regional Sales Performance Dashboard</h2>
+          <div class="detail-panel__downloads">
+            <a class="btn btn--ghost" href="/downloads/01-raw-data.csv" download><svg width="15" height="15"><use href="#icon-download"/></svg> Download Raw Data</a>
+            <a class="btn btn--ghost" href="/downloads/01-processed-data.csv" download><svg width="15" height="15"><use href="#icon-download"/></svg> Download Processed Data</a>
+          </div>
+        </header>
+        <div class="detail-panel__body">
+          <p>Built for a mid-size distributor that was still assembling regional numbers by hand each month. The workbook consolidated four separate regional spreadsheets into a single, consistent structure, then fed a Power BI model with drill-downs by region, product line, and sales rep.</p>
+          <p>The result cut the monthly reporting cycle from roughly three days of manual collation down to about twenty minutes, and gave regional managers a self-serve view instead of waiting on a static PDF.</p>
+          <div class="detail-panel__media" aria-hidden="true">
+            <div class="media-placeholder">Dashboard screenshot</div>
+            <div class="media-placeholder">Regional drill-down view</div>
+          </div>
+          <section class="detail-panel__process">
+            <h3>How I Built It</h3>
+            <p>A short screen-capture of the model being assembled in Power BI — from raw regional exports to the final drill-down view — goes here once recorded.</p>
+            <div class="media-placeholder media-placeholder--gif">Process GIF</div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail 2 -->
+    <div class="detail-panel" id="detail-2">
+      <div class="detail-panel__inner">
+        <header class="detail-panel__header">
+          <label class="detail-panel__close" aria-label="Close project details">
+            <input type="radio" name="project-select" id="close-2" class="sr-only-input">
+            <svg width="16" height="16"><use href="#icon-close"/></svg>
+          </label>
+          <span class="detail-panel__icons">
+            <svg width="26" height="26"><use href="#icon-python"/></svg>
+            <svg width="26" height="26"><use href="#icon-sql"/></svg>
+          </span>
+          <h2 class="detail-panel__title">Customer Churn Risk Model</h2>
+          <div class="detail-panel__downloads">
+            <a class="btn btn--ghost" href="/downloads/02-raw-data.csv" download><svg width="15" height="15"><use href="#icon-download"/></svg> Download Raw Data</a>
+            <a class="btn btn--ghost" href="/downloads/02-processed-data.csv" download><svg width="15" height="15"><use href="#icon-download"/></svg> Download Processed Data</a>
+          </div>
+        </header>
+        <div class="detail-panel__body">
+          <p>Pulled two years of subscription and usage history from a Postgres database, then engineered features around engagement drop-off — login frequency, feature usage, and support-ticket volume among them.</p>
+          <p>A classification model trained in Python now scores active customers weekly. Instead of reacting after a cancellation, the retention team gets a ranked list of accounts worth a proactive check-in.</p>
+          <div class="detail-panel__media" aria-hidden="true">
+            <div class="media-placeholder">Model output ranking</div>
+            <div class="media-placeholder">Feature importance chart</div>
+          </div>
+          <section class="detail-panel__process">
+            <h3>How I Built It</h3>
+            <p>A short screen-capture of the feature engineering and model evaluation process in a Python notebook goes here once recorded.</p>
+            <div class="media-placeholder media-placeholder--gif">Process GIF</div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail 3 -->
+    <div class="detail-panel" id="detail-3">
+      <div class="detail-panel__inner">
+        <header class="detail-panel__header">
+          <label class="detail-panel__close" aria-label="Close project details">
+            <input type="radio" name="project-select" id="close-3" class="sr-only-input">
+            <svg width="16" height="16"><use href="#icon-close"/></svg>
+          </label>
+          <span class="detail-panel__icons">
+            <svg width="26" height="26"><use href="#icon-excel"/></svg>
+            <svg width="26" height="26"><use href="#icon-sql"/></svg>
+          </span>
+          <h2 class="detail-panel__title">Marketing Campaign ROI Tracker</h2>
+          <div class="detail-panel__downloads">
+            <a class="btn btn--ghost" href="/downloads/03-raw-data.csv" download><svg width="15" height="15"><use href="#icon-download"/></svg> Download Raw Data</a>
+            <a class="btn btn--ghost" href="/downloads/03-processed-data.csv" download><svg width="15" height="15"><use href="#icon-download"/></svg> Download Processed Data</a>
+          </div>
+        </header>
+        <div class="detail-panel__body">
+          <p>Joined ad-platform exports with internal sales data in SQL to connect campaign spend directly to revenue, not just clicks. Attribution was the hard part — a simple last-touch model was replaced with a weighted view across the full path to purchase.</p>
+          <p>The resulting Excel workbook lets the marketing team compare channels side by side, refreshed monthly, and has already been used to retire two campaigns that were quietly losing money.</p>
+          <div class="detail-panel__media" aria-hidden="true">
+            <div class="media-placeholder">Channel comparison view</div>
+            <div class="media-placeholder">ROI by campaign</div>
+          </div>
+          <section class="detail-panel__process">
+            <h3>How I Built It</h3>
+            <p>A short screen-capture of the SQL joins and the Excel model coming together goes here once recorded.</p>
+            <div class="media-placeholder media-placeholder--gif">Process GIF</div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail 4 -->
+    <div class="detail-panel" id="detail-4">
+      <div class="detail-panel__inner">
+        <header class="detail-panel__header">
+          <label class="detail-panel__close" aria-label="Close project details">
+            <input type="radio" name="project-select" id="close-4" class="sr-only-input">
+            <svg width="16" height="16"><use href="#icon-close"/></svg>
+          </label>
+          <span class="detail-panel__icons">
+            <svg width="26" height="26"><use href="#icon-python"/></svg>
+            <svg width="26" height="26"><use href="#icon-excel"/></svg>
+          </span>
+          <h2 class="detail-panel__title">Inventory Demand Forecast</h2>
+          <div class="detail-panel__downloads">
+            <a class="btn btn--ghost" href="/downloads/04-raw-data.csv" download><svg width="15" height="15"><use href="#icon-download"/></svg> Download Raw Data</a>
+            <a class="btn btn--ghost" href="/downloads/04-processed-data.csv" download><svg width="15" height="15"><use href="#icon-download"/></svg> Download Processed Data</a>
+          </div>
+        </header>
+        <div class="detail-panel__body">
+          <p>Combined three years of sales history with seasonal and promotional flags in a Python forecasting model, then packaged the output into an Excel planning sheet the operations team already knew how to use — no new software to learn.</p>
+          <p>Stockouts on the affected seasonal product line dropped noticeably over the following two quarters, and the planning sheet now updates itself each week.</p>
+          <div class="detail-panel__media" aria-hidden="true">
+            <div class="media-placeholder">Forecast vs. actual chart</div>
+            <div class="media-placeholder">Weekly planning sheet</div>
+          </div>
+          <section class="detail-panel__process">
+            <h3>How I Built It</h3>
+            <p>A short screen-capture of the forecasting model being tuned against historical data goes here once recorded.</p>
+            <div class="media-placeholder media-placeholder--gif">Process GIF</div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail 5 -->
+    <div class="detail-panel" id="detail-5">
+      <div class="detail-panel__inner">
+        <header class="detail-panel__header">
+          <label class="detail-panel__close" aria-label="Close project details">
+            <input type="radio" name="project-select" id="close-5" class="sr-only-input">
+            <svg width="16" height="16"><use href="#icon-close"/></svg>
+          </label>
+          <span class="detail-panel__icons">
+            <svg width="26" height="26"><use href="#icon-sql"/></svg>
+            <svg width="26" height="26"><use href="#icon-powerbi"/></svg>
+          </span>
+          <h2 class="detail-panel__title">Automated Monthly Finance Report</h2>
+          <div class="detail-panel__downloads">
+            <a class="btn btn--ghost" href="/downloads/05-raw-data.csv" download><svg width="15" height="15"><use href="#icon-download"/></svg> Download Raw Data</a>
+            <a class="btn btn--ghost" href="/downloads/05-processed-data.csv" download><svg width="15" height="15"><use href="#icon-download"/></svg> Download Processed Data</a>
+          </div>
+        </header>
+        <div class="detail-panel__body">
+          <p>Replaced a finance team's manual month-end routine with a SQL pipeline that refreshes a Power BI report directly from the general ledger, keeping the same account structure the team was already used to reading.</p>
+          <p>What used to take a full day of copy-pasting between spreadsheets now takes one scheduled refresh, with the finance lead reviewing the numbers rather than assembling them.</p>
+          <div class="detail-panel__media" aria-hidden="true">
+            <div class="media-placeholder">Monthly report view</div>
+            <div class="media-placeholder">Refresh pipeline diagram</div>
+          </div>
+          <section class="detail-panel__process">
+            <h3>How I Built It</h3>
+            <p>A short screen-capture of the SQL pipeline running and the Power BI report refreshing goes here once recorded.</p>
+            <div class="media-placeholder media-placeholder--gif">Process GIF</div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail 6 -->
+    <div class="detail-panel" id="detail-6">
+      <div class="detail-panel__inner">
+        <header class="detail-panel__header">
+          <label class="detail-panel__close" aria-label="Close project details">
+            <input type="radio" name="project-select" id="close-6" class="sr-only-input">
+            <svg width="16" height="16"><use href="#icon-close"/></svg>
+          </label>
+          <span class="detail-panel__icons">
+            <svg width="26" height="26"><use href="#icon-python"/></svg>
+            <svg width="26" height="26"><use href="#icon-powerbi"/></svg>
+          </span>
+          <h2 class="detail-panel__title">Website Funnel Analysis</h2>
+          <div class="detail-panel__downloads">
+            <a class="btn btn--ghost" href="/downloads/06-raw-data.csv" download><svg width="15" height="15"><use href="#icon-download"/></svg> Download Raw Data</a>
+            <a class="btn btn--ghost" href="/downloads/06-processed-data.csv" download><svg width="15" height="15"><use href="#icon-download"/></svg> Download Processed Data</a>
+          </div>
+        </header>
+        <div class="detail-panel__body">
+          <p>Analyzed clickstream data in Python to map the full path from landing page to purchase, session by session, rather than relying on the platform's built-in aggregate funnel view.</p>
+          <p>The resulting Power BI report highlighted two steps responsible for most of the drop-off, which directly informed a checkout redesign the client's team implemented shortly after.</p>
+          <div class="detail-panel__media" aria-hidden="true">
+            <div class="media-placeholder">Funnel drop-off chart</div>
+            <div class="media-placeholder">Session path map</div>
+          </div>
+          <section class="detail-panel__process">
+            <h3>How I Built It</h3>
+            <p>A short screen-capture of the clickstream data being processed in Python goes here once recorded.</p>
+            <div class="media-placeholder media-placeholder--gif">Process GIF</div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail 7 -->
+    <div class="detail-panel" id="detail-7">
+      <div class="detail-panel__inner">
+        <header class="detail-panel__header">
+          <label class="detail-panel__close" aria-label="Close project details">
+            <input type="radio" name="project-select" id="close-7" class="sr-only-input">
+            <svg width="16" height="16"><use href="#icon-close"/></svg>
+          </label>
+          <span class="detail-panel__icons">
+            <svg width="26" height="26"><use href="#icon-sql"/></svg>
+            <svg width="26" height="26"><use href="#icon-python"/></svg>
+          </span>
+          <h2 class="detail-panel__title">Employee Attrition Study</h2>
+          <div class="detail-panel__downloads">
+            <a class="btn btn--ghost" href="/downloads/07-raw-data.csv" download><svg width="15" height="15"><use href="#icon-download"/></svg> Download Raw Data</a>
+            <a class="btn btn--ghost" href="/downloads/07-processed-data.csv" download><svg width="15" height="15"><use href="#icon-download"/></svg> Download Processed Data</a>
+          </div>
+        </header>
+        <div class="detail-panel__body">
+          <p>Queried HR and performance-review data in SQL, then used Python to test which factors most consistently predicted turnover within an employee's first year — manager tenure and time-to-first-review stood out.</p>
+          <p>The findings shaped concrete changes to onboarding and manager check-ins for two departments, with a follow-up review planned to see whether early attrition moved.</p>
+          <div class="detail-panel__media" aria-hidden="true">
+            <div class="media-placeholder">Attrition by tenure chart</div>
+            <div class="media-placeholder">Contributing factors summary</div>
+          </div>
+          <section class="detail-panel__process">
+            <h3>How I Built It</h3>
+            <p>A short screen-capture of the statistical testing process in Python goes here once recorded.</p>
+            <div class="media-placeholder media-placeholder--gif">Process GIF</div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail 8 -->
+    <div class="detail-panel" id="detail-8">
+      <div class="detail-panel__inner">
+        <header class="detail-panel__header">
+          <label class="detail-panel__close" aria-label="Close project details">
+            <input type="radio" name="project-select" id="close-8" class="sr-only-input">
+            <svg width="16" height="16"><use href="#icon-close"/></svg>
+          </label>
+          <span class="detail-panel__icons">
+            <svg width="26" height="26"><use href="#icon-excel"/></svg>
+            <svg width="26" height="26"><use href="#icon-powerbi"/></svg>
+          </span>
+          <h2 class="detail-panel__title">Supply Chain KPI Tracker</h2>
+          <div class="detail-panel__downloads">
+            <a class="btn btn--ghost" href="/downloads/08-raw-data.csv" download><svg width="15" height="15"><use href="#icon-download"/></svg> Download Raw Data</a>
+            <a class="btn btn--ghost" href="/downloads/08-processed-data.csv" download><svg width="15" height="15"><use href="#icon-download"/></svg> Download Processed Data</a>
+          </div>
+        </header>
+        <div class="detail-panel__body">
+          <p>Standardized KPI definitions across three warehouses that had each been tracking on-time delivery, lead time, and supplier performance differently — the definitions turned out to matter as much as the data.</p>
+          <p>The shared Power BI tracker now lets operations leadership compare sites apples-to-apples for the first time, refreshed daily from each site's source system.</p>
+          <div class="detail-panel__media" aria-hidden="true">
+            <div class="media-placeholder">Site comparison view</div>
+            <div class="media-placeholder">KPI definitions sheet</div>
+          </div>
+          <section class="detail-panel__process">
+            <h3>How I Built It</h3>
+            <p>A short screen-capture of the KPI standardization and Power BI build goes here once recorded.</p>
+            <div class="media-placeholder media-placeholder--gif">Process GIF</div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- To add project 9+: copy one .detail-panel block, match its id to
+         "detail-9", and add the matching CSS visibility rule (one line)
+         noted in styles.css next to the existing eight. -->
+  </div>
+
+</div>
+</body>
+</html>
