@@ -1,20 +1,27 @@
-# Cloudflare configuration for this Pages project.
-# "." means the static site root (index.html, styles.css) is this
-# same folder — there's no build step, so nothing needs bundling.
+# Cloudflare configuration for this Worker.
+#
+# Cloudflare has been consolidating "Pages" into a single Workers +
+# Static Assets model, and this config targets that current model:
+# `main` is the Worker's code entry point, and [assets] tells it which
+# folder to serve as the static site. Deploy with `npx wrangler deploy`.
 name = "nora-callahan-portfolio"
-compatibility_date = "2024-01-01"
-pages_build_output_dir = "."
+main = "src/index.js"
+compatibility_date = "2026-09-01"
 
-# Workers AI binding — lets functions/api/ask.js call env.AI.run(...).
-# If this doesn't pick up automatically on deploy, add it manually in
-# the dashboard instead: Pages project -> Settings -> Bindings ->
-# Add -> Workers AI -> variable name "AI". See README.md.
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# Workers AI binding — lets src/ask-handler.js call env.AI.run(...).
+# If this doesn't attach automatically on deploy, add it manually in
+# the dashboard instead: Worker -> Settings -> Bindings -> Add ->
+# Workers AI -> variable name "AI". See README.md.
 [ai]
 binding = "AI"
 
 # TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are NOT set here on purpose —
 # secrets shouldn't live in a checked-in config file. Set them as
-# encrypted environment variables in the dashboard, or with:
-#   npx wrangler pages secret put TELEGRAM_BOT_TOKEN
-#   npx wrangler pages secret put TELEGRAM_CHAT_ID
+# encrypted variables in the dashboard, or with:
+#   npx wrangler secret put TELEGRAM_BOT_TOKEN
+#   npx wrangler secret put TELEGRAM_CHAT_ID
 # See README.md for the full walkthrough.
