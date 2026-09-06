@@ -1,10 +1,10 @@
 /**
- * _render.js
+ * src/render.js
  * ----------------------------------------------------------------------
  * There is no templating engine on the frontend by design (pure
- * HTML/CSS, no build step). Instead, functions/api/ask.js fetches the
- * REAL static index.html via the Pages ASSETS binding and performs two
- * small, targeted string replacements on it:
+ * HTML/CSS, no build step). Instead, src/ask-handler.js fetches the
+ * REAL static index.html via the Worker's ASSETS binding and performs
+ * two small, targeted string replacements on it:
  *
  *   1. Mark the #mode-chat radio as checked, so the chat panel renders
  *      open on the page the Worker returns (see styles.css — the panel
@@ -37,10 +37,10 @@ export function escapeHtml(str) {
  */
 export function renderChatResult(html, question, answer) {
   if (!html.includes(MODE_CHAT_MARKER)) {
-    throw new Error("_render.js: mode-chat marker not found — did index.html change?");
+    throw new Error("render.js: mode-chat marker not found — did index.html change?");
   }
   if (!html.includes(CHAT_LOG_MARKER)) {
-    throw new Error("_render.js: chat-log marker not found — did index.html change?");
+    throw new Error("render.js: chat-log marker not found — did index.html change?");
   }
 
   let out = html.replace(MODE_CHAT_MARKER, `${MODE_CHAT_MARKER} checked`);
