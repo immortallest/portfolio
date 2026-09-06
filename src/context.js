@@ -1,9 +1,8 @@
 /**
- * _context.js
+ * src/context.js
  * ----------------------------------------------------------------------
- * Files starting with "_" are ignored by Cloudflare Pages' file-based
- * router, so this is never itself an accessible URL — it's a shared
- * module imported by functions/api/ask.js.
+ * A plain module imported by src/ask-handler.js — not a route, just
+ * shared data.
  *
  * EDIT THIS FILE to update what the AI chat knows about you. It is
  * given to the model as system-prompt context for every question, so
