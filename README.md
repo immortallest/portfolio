@@ -1,4 +1,3 @@
-[Uploading README.md…]()
 # Nora Callahan — Data Analyst Portfolio
 
 A portfolio site built to the spec in `Vision.md`: pure HTML/CSS on the
@@ -54,6 +53,19 @@ pin a state open independent of focus without a real form submission.
 Once a question is actually submitted, the Worker re-renders the page
 with the chat panel held open by a checked radio, which has no such
 limitation.
+
+Two more techniques worth knowing about if you're editing this:
+
+- **The before/after image comparisons** (used on a couple of
+  projects) are a looping `clip-path` + `animation` pair — no
+  interaction needed, it just plays. See `.before-after` in
+  `public/styles.css`.
+- **The download buttons'** green fill-and-spin on click is a
+  fixed-duration decorative animation triggered by `:focus`, not a
+  real progress bar — pure CSS genuinely cannot observe an actual file
+  download's progress. See the `§5` comment at the top of
+  `public/styles.css` for the full explanation and its `:visited`
+  fallback.
 
 ## 3. Deploying
 
