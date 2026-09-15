@@ -9,12 +9,18 @@
    the modern :has() relational selector, which lets a distant ancestor
    react to a descendant's state. Nothing here relies on JavaScript.
 
-   1. FAQ accordion      -> native <details>/<summary>, fully native.
+   1. FAQ accordion      -> native <details name="faq-accordion">/<summary>.
+                            Sharing one `name` makes the browser itself
+                            enforce "only one open at a time" — fully
+                            native, not a CSS trick. What genuinely isn't
+                            possible without JS: closing it when the user
+                            clicks elsewhere on the page (see the comment
+                            by .faq-list below for why).
    2. FAQ <-> Chat panel -> .question-strip:has(#chat-input:focus, #mode-chat:checked)
                             #chat-input:focus covers the "as you click into the
                             field" live preview. #mode-chat:checked covers the
                             persistent state after the Worker re-renders this
-                            page with an answer (see src/render.js).
+                            page with the conversation (see src/render.js).
                             KNOWN LIMITATION: if a person focuses the input,
                             the panel opens as a preview, and they click away
                             WITHOUT submitting and WITHOUT pressing "return to
@@ -36,20 +42,11 @@
                             grid — radios can't be unchecked by re-clicking,
                             so closing means selecting a different, inert
                             option in the same group.
-   5. Download progress   -> Pure CSS cannot observe a real file download's
-                            progress (that needs JS + the Fetch/XHR progress
-                            APIs) or reliably persist state on a `download`
-                            link across page loads (browsers restrict what
-                            :visited can style, and treat `download` links
-                            inconsistently for history purposes). The fill
-                            sweep + spinning icon is a fixed-duration,
-                            honestly-decorative animation triggered by focus
-                            (which a click reliably gives the link), holding
-                            its green end-state via animation-fill-mode for
-                            as long as focus remains — the closest reliable
-                            approximation, with a best-effort :visited
-                            fallback for a longer-lived (but not guaranteed)
-                            "already downloaded" cue.
+   5. Download buttons    -> A one-second icon spin plays on :focus (which a
+                            click reliably gives the link), purely to confirm
+                            the click registered — pure CSS cannot observe a
+                            real file download's actual progress, so this
+                            doesn't try to fake one.
    ========================================================================== */
 
 /* ---------- Design tokens ---------- */
@@ -76,6 +73,9 @@
   --silver-200: #e2e6e2;
   --silver-100: #edf0ed;
   --silver-050: #f6f8f6;
+  --silver-faq: #d7ddd7;  /* deliberately more saturated than --silver-050 so
+                              the FAQ backdrop reads as clearly different from
+                              the card strip's lighter gray next to it */
   --paper: #ffffff;
 
   --border: #dee3df;
@@ -218,7 +218,7 @@ input { font: inherit; color: inherit; }
   grid-column: 1 / 5;
   grid-row: 1;
   z-index: 1;
-  background: var(--silver-050); /* gray FAQ backdrop — cards/drawers below stay white */
+  background: var(--silver-faq); /* gray FAQ backdrop — cards/drawers below stay white */
   border-right: 1px solid var(--border);
   padding: var(--strip-pad);
   display: flex;
@@ -258,6 +258,16 @@ input { font: inherit; color: inherit; }
 }
 
 .faq-list { display: flex; flex-direction: column; gap: var(--space-2); }
+/* Every <details> below shares name="faq-accordion" (see index.html), which
+   makes the browser itself enforce "only one open at a time" — opening a
+   new one natively closes whichever other one was open. That's a real,
+   fairly recent native HTML feature, not a CSS trick.
+   One thing that genuinely isn't possible without JavaScript: closing the
+   open item when the user clicks *anywhere else on the page*. <details>
+   only ever opens/closes in response to its own <summary> being activated
+   — there is no CSS selector for "a click happened outside this element"
+   (that's exactly why JS frameworks ship a dedicated "click outside" hook;
+   the platform has no native equivalent). */
 .faq-item {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -409,6 +419,7 @@ input { font: inherit; color: inherit; }
   background: var(--silver-050);
   padding: var(--strip-pad);
   transform: translateX(0);
+  overflow: hidden; /* only .card-grid below scrolls — see its comment */
   transition: transform .45s var(--ease);
 }
 .app:has(.project-radio:checked) .card-strip {
@@ -450,16 +461,23 @@ input { font: inherit; color: inherit; }
 }
 .clear-filter-btn:hover { color: var(--ink-900); border-color: var(--ink-500); }
 
+/* The ONLY scrollbar in the card strip. It only appears once there are more
+   than 8 projects (more than 4 rows) — max-height is sized to fit exactly
+   4 rows, so with 8 cards or fewer, content never actually overflows and
+   overflow-y: auto never shows a scrollbar at all. (An earlier version's
+   max-height math forgot to include this element's own padding-bottom,
+   which left it ~2px too short and caused a phantom scrollbar even at
+   exactly 8 cards — fixed by folding that padding into the same formula.) */
 .card-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   grid-auto-rows: var(--card-h);
   gap: var(--grid-gap);
   align-content: start;
-  max-height: calc(var(--card-h) * 4 + var(--grid-gap) * 3 + 2px);
+  max-height: calc(var(--card-h) * 4 + var(--grid-gap) * 3 + 6px);
   overflow-y: auto;
   padding-right: var(--space-2);
-  padding-bottom: 4px;
+  padding-bottom: 6px;
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) transparent;
 }
@@ -700,40 +718,15 @@ input { font: inherit; color: inherit; }
 }
 .btn--ghost { background: var(--paper); border: 1.4px solid var(--border-strong); color: var(--ink-700); }
 .btn--ghost:hover { border-color: var(--green-600); color: var(--green-800); }
+.btn--download { background: var(--paper); border: 1.4px solid var(--border-strong); color: var(--ink-700); }
+.btn--download:hover { border-color: var(--green-600); color: var(--green-800); }
 
-/* Download buttons: click-triggered sweep + spin "confirmation" animation.
-   See the long comment at the top of this file (§5) for exactly what this
-   can and can't do in pure CSS, and why. */
-.btn--download {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-  background: var(--paper);
-  border: 1.4px solid var(--border-strong);
-  color: var(--ink-700);
-}
-.btn--download:hover { border-color: var(--green-600); }
-.btn--download:visited { background: var(--green-600); border-color: var(--green-600); color: #fff; }
-.btn__fill {
-  position: absolute;
-  inset: 0;
-  width: 0%;
-  background: var(--green-600);
-  z-index: 0;
-}
-.btn--download:focus .btn__fill { animation: btn-sweep 1.1s var(--ease) forwards; }
-.btn__content {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: color .3s var(--ease) .15s;
-}
-.btn--download:focus .btn__content { color: #fff; }
-.btn__icon { flex-shrink: 0; }
-.btn--download:focus .btn__icon { animation: btn-spin 1.1s linear; }
-@keyframes btn-sweep { from { width: 0%; } to { width: 100%; } }
+/* Download buttons: a single one-second icon spin plays on click, purely
+   to confirm the button worked — not a progress indicator. Pure CSS has no
+   way to observe a real file download's actual progress (that needs JS +
+   the Fetch/XHR progress APIs), so this intentionally doesn't try to fake
+   one; it's just a brief, honest "got it" cue. */
+.btn--download:focus .btn__icon { animation: btn-spin 1s linear; }
 @keyframes btn-spin { to { transform: rotate(360deg); } }
 
 .detail-panel__body p { font-size: .92rem; line-height: 1.68; color: var(--ink-700); margin-bottom: var(--space-4); }
@@ -836,9 +829,16 @@ input { font: inherit; color: inherit; }
   html, body { height: auto; overflow: visible; }
   body:has(.project-radio:checked) { overflow: hidden; height: 100%; } /* still lock the background while the full-screen detail sheet is open */
 
-  .app { display: block; height: auto; }
+  .app { display: flex; flex-direction: column; height: auto; }
   .strip { height: auto; overflow-y: visible; }
   .question-strip, .card-strip, .info-strip { grid-column: unset; }
+
+  /* Mobile-only reading order: identity first, then the work, then FAQ/chat
+     last. Desktop keeps its own left-to-right order (Question, Card, Info)
+     unchanged — this "order" only takes effect below this breakpoint. */
+  .info-strip { order: 1; }
+  .card-strip { order: 2; }
+  .question-strip { order: 3; }
 
   .question-strip { border-right: none; border-bottom: 1px solid var(--border); }
   .card-strip { transform: none !important; }

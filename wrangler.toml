@@ -19,6 +19,28 @@ binding = "ASSETS"
 [ai]
 binding = "AI"
 
+# Workers KV binding — temporary storage for an in-progress chat
+# conversation (see src/session.js). REQUIRED for multi-turn chat memory
+# to work; without it the chat still answers questions, it just won't
+# remember earlier turns in the same conversation.
+#
+# You must create this namespace yourself (it's account-specific, so
+# there's no valid id to ship in this file):
+#   npx wrangler kv namespace create CHAT_SESSIONS
+# then paste the "id" it prints into the line below. See README.md.
+[[kv_namespaces]]
+binding = "CHAT_SESSIONS"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+# Cron Trigger — runs src/scheduled.js every 10 minutes to find
+# conversations that have gone quiet, send their full transcript to
+# Telegram once, and delete them. See src/scheduled.js for why this
+# (rather than "the moment the tab closes") is what actually marks a
+# conversation as "over" in an architecture with no JavaScript to signal
+# that moment directly.
+[triggers]
+crons = ["*/10 * * * *"]
+
 # TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID are NOT set here on purpose —
 # secrets shouldn't live in a checked-in config file. Set them as
 # encrypted variables in the dashboard, or with:

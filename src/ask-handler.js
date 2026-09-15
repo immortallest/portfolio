@@ -1,27 +1,27 @@
 /**
  * src/ask-handler.js
  * ----------------------------------------------------------------------
- * Handles the chat form submission (POST /api/ask), called directly from
- * the router in src/index.js.
+ * Handles POST /api/ask — the target of the chat <form> in index.html.
  *
- * Because the frontend has no client-side JavaScript, this is a real
- * HTML form submission (a full page navigation), not a fetch() call.
- * This function therefore returns a complete HTML page, not JSON: it
- * fetches the site's own static index.html through the Worker's ASSETS
- * binding, asks Workers AI for an answer, and hands back a copy of the
- * page with that exchange rendered into the chat panel. See
- * src/render.js for exactly how that splice works.
+ * THE OLD BUG THIS FIXES: this used to respond to the POST directly with
+ * the rendered HTML page. That meant the browser's "current page" was
+ * itself the result of a POST — so refreshing it made the browser
+ * resubmit that same POST, asking the same question again. This is a
+ * well-known class of bug with a well-known fix: Post/Redirect/Get.
+ * Instead of returning HTML here, this handler saves the new answer and
+ * responds with an HTTP redirect to GET /chat. The browser then loads
+ * /chat with a normal GET, and *that* is what refreshing reloads — safe,
+ * because GET requests aren't resubmitted. See src/chat-page-handler.js.
  *
- * Because there's no JS to intercept the request, the browser's
- * address bar will show /api/ask after a question is asked — this is
- * expected in a no-JS architecture, not a bug. The "return to FAQ"
- * button in the chat panel goes back to "/".
+ * MULTI-TURN CONTEXT: the visitor's session id (a cookie — see
+ * src/session.js) is used to look up their stored conversation so far.
+ * The model gets that history (trimmed to the most recent stretch) as
+ * real conversation context, not just the latest question in isolation.
  * ----------------------------------------------------------------------
  */
 
 import { buildSystemPrompt } from "./context.js";
-import { notifyTelegram } from "./telegram.js";
-import { renderChatResult } from "./render.js";
+import { getOrCreateSessionId, getHistory, saveHistory, MAX_MESSAGES_FOR_MODEL } from "./session.js";
 
 // A small, current (as of writing), non-deprecated Workers AI instruct
 // model — a good fit for short FAQ-style answers. Swap this for any
@@ -33,7 +33,7 @@ const MAX_QUESTION_LENGTH = 400;
 
 export async function handleAsk(request, env, ctx) {
   if (request.method === "GET") {
-    // A stray GET (e.g. a page refresh after submitting) just goes home.
+    // A stray GET (e.g. someone bookmarking /api/ask) just goes home.
     return Response.redirect(new URL("/", request.url), 303);
   }
   if (request.method !== "POST") {
@@ -55,41 +55,38 @@ export async function handleAsk(request, env, ctx) {
     question = question.slice(0, MAX_QUESTION_LENGTH);
   }
 
-  const answer = await getAnswer(env, question);
+  const { sessionId, setCookie } = getOrCreateSessionId(request);
+  const existing = (await getHistory(env, sessionId)) || { messages: [] };
 
-  // Fire-and-forget: don't let a slow/failed Telegram call delay the
-  // response to the visitor. waitUntil keeps the Worker alive long
-  // enough for it to finish after the response is sent.
-  if (ctx && ctx.waitUntil) {
-    ctx.waitUntil(notifyTelegram(env, question, answer));
-  } else {
-    notifyTelegram(env, question, answer).catch(() => {});
-  }
+  const answer = await getAnswer(env, question, existing.messages);
 
-  // Fetch the real static page and splice this exchange into it,
-  // rather than maintaining a second copy of the page template.
-  // The ASSETS binding wants the "pretty" path, not index.html directly.
-  const assetResponse = await env.ASSETS.fetch(new URL("/", request.url));
-  const html = await assetResponse.text();
-  const rendered = renderChatResult(html, question, answer);
+  const now = Date.now();
+  existing.messages.push({ role: "user", content: question, time: now });
+  existing.messages.push({ role: "assistant", content: answer, time: now });
+  existing.lastActive = now;
 
-  return new Response(rendered, {
-    headers: { "content-type": "text/html; charset=UTF-8" },
-  });
+  await saveHistory(env, sessionId, existing);
+
+  const redirectUrl = new URL("/chat", request.url);
+  const res = new Response(null, { status: 303, headers: { Location: redirectUrl.toString() } });
+  if (setCookie) res.headers.append("Set-Cookie", setCookie);
+  return res;
 }
 
-async function getAnswer(env, question) {
+async function getAnswer(env, question, historyMessages) {
   if (!env.AI) {
     return "The AI chat isn't connected yet — this site needs a Workers AI binding configured. See README.md for setup steps.";
   }
 
   try {
-    const result = await env.AI.run(MODEL, {
-      messages: [
-        { role: "system", content: buildSystemPrompt() },
-        { role: "user", content: question },
-      ],
-    });
+    const recent = (historyMessages || []).slice(-MAX_MESSAGES_FOR_MODEL);
+    const messages = [
+      { role: "system", content: buildSystemPrompt() },
+      ...recent.map((m) => ({ role: m.role, content: m.content })),
+      { role: "user", content: question },
+    ];
+
+    const result = await env.AI.run(MODEL, { messages });
 
     const text = (result && result.response ? String(result.response) : "").trim();
     if (!text) throw new Error("empty model response");
