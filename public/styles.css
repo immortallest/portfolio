@@ -1,0 +1,881 @@
+/* ==========================================================================
+   Nora Callahan — Data Analyst Portfolio
+   Pure HTML/CSS. No client-side JavaScript is used anywhere in this file.
+
+   HOW THE INTERACTIVITY WORKS (read this before editing selectors)
+   --------------------------------------------------------------------------
+   Every interactive state is driven by native, keyboard-operable HTML
+   controls (native <details>/<summary>, and radio <input>s) combined with
+   the modern :has() relational selector, which lets a distant ancestor
+   react to a descendant's state. Nothing here relies on JavaScript.
+
+   1. FAQ accordion      -> native <details>/<summary>, fully native.
+   2. FAQ <-> Chat panel -> .question-strip:has(#chat-input:focus, #mode-chat:checked)
+                            #chat-input:focus covers the "as you click into the
+                            field" live preview. #mode-chat:checked covers the
+                            persistent state after the Worker re-renders this
+                            page with an answer (see src/render.js).
+                            KNOWN LIMITATION: if a person focuses the input,
+                            the panel opens as a preview, and they click away
+                            WITHOUT submitting and WITHOUT pressing "return to
+                            FAQ", the panel closes on its own (focus-driven).
+                            This is the closest reliable pure-CSS behaviour;
+                            a JS build could pin the open state independent of
+                            focus.
+   3. Category filter    -> .app:has(#filter-*:checked) toggles visibility of
+                            non-matching .project-card elements and highlights
+                            the matching .tag. A dedicated, always-tabbable
+                            pill row in the toolbar is the accessible control;
+                            the tags repeated on each card are convenience
+                            mouse/touch targets pointing at the same radios.
+   4. Project detail view -> .app:has(.project-radio:checked) switches the
+                            layout into detail mode; .app:has(#project-N:checked)
+                            reveals the matching #detail-N panel. Each panel
+                            has its own "close" radio (in the same radio
+                            group) so it can deterministically return to the
+                            grid — radios can't be unchecked by re-clicking,
+                            so closing means selecting a different, inert
+                            option in the same group.
+   5. Download progress   -> Pure CSS cannot observe a real file download's
+                            progress (that needs JS + the Fetch/XHR progress
+                            APIs) or reliably persist state on a `download`
+                            link across page loads (browsers restrict what
+                            :visited can style, and treat `download` links
+                            inconsistently for history purposes). The fill
+                            sweep + spinning icon is a fixed-duration,
+                            honestly-decorative animation triggered by focus
+                            (which a click reliably gives the link), holding
+                            its green end-state via animation-fill-mode for
+                            as long as focus remains — the closest reliable
+                            approximation, with a best-effort :visited
+                            fallback for a longer-lived (but not guaranteed)
+                            "already downloaded" cue.
+   ========================================================================== */
+
+/* ---------- Design tokens ---------- */
+:root {
+  --ink-900: #16211b;
+  --ink-700: #37453d;
+  --ink-500: #5c6961;
+  --ink-300: #96a29a;
+  --ink-100: #d8ded9;
+
+  --green-900: #123423;
+  --green-800: #16452c;
+  --green-700: #1c5c3a;
+  --green-600: #227249;
+  --green-500: #2c8a58;
+  --green-300: #7fc79c;
+  --green-200: #bfe3cd;   /* card-selected background */
+  --green-tag: #9bd3b3;   /* category-selected background — deliberately a
+                              touch darker than --green-200 so a selected
+                              card and an active category read as distinct */
+  --green-100: #dcf0e3;
+  --green-050: #f1faf4;
+
+  --silver-200: #e2e6e2;
+  --silver-100: #edf0ed;
+  --silver-050: #f6f8f6;
+  --paper: #ffffff;
+
+  --border: #dee3df;
+  --border-strong: #c7d0c9;
+
+  --shadow-sm: 0 1px 2px rgba(18, 52, 35, .07);
+  --shadow-md: 0 8px 24px rgba(18, 52, 35, .10);
+  --shadow-lg: 0 24px 60px rgba(18, 52, 35, .24);
+
+  --radius-sm: 7px;
+  --radius-md: 13px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --font-serif: ui-serif, Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, Consolas, monospace;
+
+  --ease: cubic-bezier(.4, 0, .2, 1);
+
+  /* Kept compact on purpose: the whole app is locked to one viewport with
+     no page scroll (see "NO-SCROLL APP SHELL" below), so every strip has
+     to earn its vertical space. */
+  --card-h: 176px;
+  --grid-gap: 12px;
+  --strip-pad: var(--space-5) var(--space-5) var(--space-4);
+}
+
+/* ---------- Reset ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { height: 100%; -webkit-text-size-adjust: 100%; }
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden; /* see "NO-SCROLL APP SHELL" — overridden on mobile */
+  font-family: var(--font-sans);
+  color: var(--ink-900);
+  background: var(--paper);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+h1, h2, h3, p, fieldset { margin: 0; padding: 0; border: 0; }
+a { color: inherit; }
+svg { display: block; }
+input { font: inherit; color: inherit; }
+::selection { background: var(--green-200); color: var(--green-900); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+  }
+  /* The two rules above would turn the before/after comparison's *infinite*
+     loop into a rapid strobe instead of stopping it, so it gets an explicit
+     override: freeze it at a static midpoint rather than flicker forever. */
+  .before-after__clip, .before-after__line { animation: none !important; }
+  .before-after__clip { clip-path: inset(0 0 50% 0) !important; }
+  .before-after__line { top: 50% !important; }
+}
+
+/* ---------- Utilities ---------- */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.sr-only-input {
+  position: absolute;
+  opacity: 0;
+  width: 1px; height: 1px;
+  margin: -1px;
+  pointer-events: none;
+}
+.icon-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+.skip-link {
+  position: fixed;
+  left: var(--space-3);
+  top: -60px;
+  background: var(--green-800);
+  color: #fff;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  z-index: 200;
+  text-decoration: none;
+  font-weight: 600;
+  transition: top .2s var(--ease);
+}
+.skip-link:focus { top: var(--space-3); }
+
+:focus-visible {
+  outline: 2.5px solid var(--green-600);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ==========================================================================
+   NO-SCROLL APP SHELL
+   The whole interface is meant to fit inside one viewport with no page-level
+   scrollbar, on any desktop/tablet screen — including the real, variable
+   space left over after browser chrome (tabs, bookmarks bar, address bar,
+   OS taskbar, etc). `dvh` accounts for that dynamically; hard `overflow:
+   hidden` on html/body removes any page-level scroll entirely. Any one
+   strip's own content can still scroll *within itself* (each .strip below
+   gets its own overflow-y), so unusually long content never gets clipped —
+   it just becomes a small, contained scroll area instead of growing the
+   page. On narrow/mobile screens this is intentionally turned back into a
+   normal scrolling page — see the max-width: 960px block at the bottom.
+   ========================================================================== */
+.app {
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  height: 100vh;
+  height: 100dvh;
+  position: relative;
+  isolation: isolate;
+}
+.strip {
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ---------- Question strip ---------- */
+.question-strip {
+  grid-column: 1 / 5;
+  grid-row: 1;
+  z-index: 1;
+  background: var(--silver-050); /* gray FAQ backdrop — cards/drawers below stay white */
+  border-right: 1px solid var(--border);
+  padding: var(--strip-pad);
+  display: flex;
+  flex-direction: column;
+  transition: opacity .3s var(--ease), transform .3s var(--ease), background .25s var(--ease);
+}
+.app:has(.project-radio:checked) .question-strip {
+  opacity: 0;
+  pointer-events: none;
+}
+/* Pure white the moment the chat panel is active, so the two modes read as
+   visually distinct areas, not just different content in the same box. */
+.question-strip:has(#chat-input:focus, #mode-chat:checked) {
+  background: #ffffff;
+}
+
+.question-strip__faq-collapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows .35s var(--ease);
+}
+.question-strip__faq-inner { overflow: hidden; min-height: 0; }
+.question-strip:has(#chat-input:focus, #mode-chat:checked) .question-strip__faq-collapse {
+  grid-template-rows: 0fr;
+}
+.question-strip:has(#chat-input:focus, #mode-chat:checked) .question-strip__faq-inner {
+  opacity: 0;
+  transition: opacity .2s var(--ease);
+}
+
+.faq-heading {
+  font-family: var(--font-serif);
+  font-size: clamp(1.5rem, 1.3rem + 0.9vw, 1.9rem);
+  font-weight: 700;
+  color: var(--ink-900);
+  margin-bottom: var(--space-3);
+}
+
+.faq-list { display: flex; flex-direction: column; gap: var(--space-2); }
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--paper); /* stays white against the strip's gray backdrop */
+  transition: box-shadow .2s var(--ease), border-color .2s var(--ease);
+}
+.faq-item[open] { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+.faq-item summary {
+  list-style: none;
+  cursor: pointer;
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-weight: 600;
+  font-size: .9rem;
+  border-radius: var(--radius-md);
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::marker { content: ""; }
+.faq-item summary:focus-visible { outline-offset: -3px; }
+.faq-item .chevron { flex-shrink: 0; color: var(--green-600); transition: transform .25s var(--ease); }
+.faq-item[open] .chevron { transform: rotate(180deg); }
+.faq-item[open] summary { border-bottom: 1px solid var(--border); }
+
+.faq-answer {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0 var(--space-4);
+  transition: max-height .3s var(--ease), opacity .25s var(--ease), padding .3s var(--ease);
+}
+.faq-item[open] .faq-answer {
+  max-height: 320px;
+  opacity: 1;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+}
+.faq-answer p { font-size: .85rem; line-height: 1.55; color: var(--ink-700); }
+
+.question-strip__chat { display: flex; flex-direction: column; margin-top: auto; }
+
+.chat-panel {
+  position: relative;
+  display: grid;
+  grid-template-rows: 0fr;
+  overflow: hidden; /* BUG FIX: without this, the absolutely-positioned
+    .return-to-faq button below was never actually clipped when the panel
+    was collapsed to 0 height, so it stayed visible (and mispositioned)
+    even in plain FAQ mode. Clipping the collapsed box hides it correctly,
+    and it reappears — correctly pinned top-right of the chat panel — only
+    once the panel expands in chat mode. */
+  transition: grid-template-rows .35s var(--ease);
+}
+.question-strip:has(#chat-input:focus, #mode-chat:checked) .chat-panel {
+  grid-template-rows: 1fr;
+}
+.chat-log {
+  overflow: hidden auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-7) var(--space-2) 0;
+}
+.chat-bubble {
+  max-width: 94%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: .87rem;
+  line-height: 1.55;
+}
+.chat-bubble p { margin: 0; }
+.chat-bubble--assistant {
+  background: var(--green-050);
+  color: var(--ink-900);
+  border-bottom-left-radius: var(--space-1);
+  align-self: flex-start;
+}
+.chat-bubble--user {
+  background: var(--green-700);
+  color: #fff;
+  border-bottom-right-radius: var(--space-1);
+  align-self: flex-end;
+}
+
+/* Only ever visible inside the chat panel itself (see the overflow:hidden
+   fix above) — top-right of that panel, as requested. */
+.return-to-faq {
+  position: absolute;
+  top: 0; right: 0;
+  width: 34px; height: 34px;
+  display: grid;
+  place-items: center;
+  background: var(--green-050);
+  color: var(--green-700);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background .2s var(--ease);
+}
+.return-to-faq:hover { background: var(--green-100); }
+.return-to-faq:has(.sr-only-input:focus-visible) { outline: 2.5px solid var(--green-600); outline-offset: 2px; }
+
+.chat-form {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  background: var(--silver-050);
+  border: 1.4px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  flex-shrink: 0;
+  transition: border-color .2s var(--ease), box-shadow .2s var(--ease);
+}
+.question-strip:has(#chat-input:focus, #mode-chat:checked) .chat-form {
+  background: var(--paper); /* stay legible against the now-white strip */
+}
+.chat-form:has(#chat-input:focus) {
+  border-color: var(--green-600);
+  box-shadow: 0 0 0 3px var(--green-100);
+}
+.chat-form input[type="text"] {
+  flex: 1; min-width: 0;
+  border: none; background: transparent; outline: none;
+  font-size: .92rem; color: var(--ink-900);
+}
+.chat-form input[type="text"]::placeholder { color: var(--ink-300); }
+.chat-send {
+  flex-shrink: 0;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: var(--green-700);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background .2s var(--ease), transform .15s var(--ease);
+}
+.chat-send:hover { background: var(--green-600); }
+.chat-send:active { transform: scale(.93); }
+
+/* ---------- Card strip ---------- */
+.card-strip {
+  grid-column: 5 / 13;
+  grid-row: 1;
+  z-index: 2;
+  background: var(--silver-050);
+  padding: var(--strip-pad);
+  transform: translateX(0);
+  transition: transform .45s var(--ease);
+}
+.app:has(.project-radio:checked) .card-strip {
+  transform: translateX(50%);
+}
+
+.card-strip__toolbar { margin-bottom: var(--space-3); flex-shrink: 0; }
+.filter-group { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.filter-pill, .clear-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px 7px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  border: 1.4px solid var(--border-strong);
+  color: var(--ink-700);
+  font-family: var(--font-mono);
+  font-size: .78rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  transition: background .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease);
+}
+.filter-pill svg { border-radius: 4px; }
+.filter-pill:hover { border-color: var(--green-500); }
+/* Category-selected shade: deliberately darker than the card-selected
+   green (--green-200) below, so the two states stay visually distinct
+   even when both are true (a matching card is selected while its
+   category is also the active filter). */
+.filter-pill:has(.sr-only-input:checked) { background: var(--green-tag); border-color: var(--green-700); color: var(--green-900); }
+.filter-pill:has(.sr-only-input:focus-visible),
+.clear-filter-btn:has(.sr-only-input:focus-visible) { outline: 2.5px solid var(--green-600); outline-offset: 2px; }
+
+.clear-filter-btn { display: none; color: var(--ink-500); border-style: dashed; }
+.app:has(#filter-excel:checked, #filter-python:checked, #filter-sql:checked, #filter-powerbi:checked) .clear-filter-btn {
+  display: inline-flex;
+}
+.clear-filter-btn:hover { color: var(--ink-900); border-color: var(--ink-500); }
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: var(--card-h);
+  gap: var(--grid-gap);
+  align-content: start;
+  max-height: calc(var(--card-h) * 4 + var(--grid-gap) * 3 + 2px);
+  overflow-y: auto;
+  padding-right: var(--space-2);
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.card-grid::-webkit-scrollbar { width: 8px; }
+.card-grid::-webkit-scrollbar-track { background: transparent; }
+.card-grid::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 8px; }
+
+.project-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  cursor: pointer;
+  overflow: hidden;
+  transition: background .2s var(--ease), border-color .2s var(--ease), box-shadow .2s var(--ease), transform .15s var(--ease);
+}
+.project-card:hover { border-color: var(--border-strong); box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+/* Selecting a card is communicated by this background shift alone — no
+   separate checkbox glyph (removed; the two technology icons now sit in
+   its old top-left spot instead, see .project-card__icons below). */
+.project-card:has(.project-radio:checked) { background: var(--green-200); border-color: var(--green-600); }
+.project-card:has(.project-radio:focus-visible) { outline: 2.5px solid var(--green-600); outline-offset: 2px; }
+
+.project-radio { position: absolute; opacity: 0; width: 1px; height: 1px; }
+
+.project-card__icons { display: flex; margin-bottom: var(--space-2); }
+.project-card__icons svg { border-radius: 6px; border: 2px solid var(--paper); }
+.project-card__icons svg:not(:first-child) { margin-left: -8px; }
+.project-card:has(.project-radio:checked) .project-card__icons svg { border-color: var(--green-200); }
+
+.project-card__name {
+  font-size: .97rem; font-weight: 700; color: var(--ink-900); line-height: 1.3;
+  margin-bottom: 6px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.project-card__desc {
+  font-size: .8rem; color: var(--ink-500); line-height: 1.45; flex: 1;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.project-card__tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: var(--space-3); }
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: .68rem; font-weight: 600;
+  padding: 4px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--silver-100);
+  color: var(--ink-700);
+  cursor: pointer;
+  transition: background .2s var(--ease), color .2s var(--ease);
+}
+.tag:hover { background: var(--silver-200); }
+.app:has(#filter-excel:checked) .tag--excel,
+.app:has(#filter-python:checked) .tag--python,
+.app:has(#filter-sql:checked) .tag--sql,
+.app:has(#filter-powerbi:checked) .tag--powerbi {
+  background: var(--green-tag); color: var(--green-900);
+}
+
+.app:has(#filter-excel:checked) .project-card:not([data-cat~="excel"]),
+.app:has(#filter-python:checked) .project-card:not([data-cat~="python"]),
+.app:has(#filter-sql:checked) .project-card:not([data-cat~="sql"]),
+.app:has(#filter-powerbi:checked) .project-card:not([data-cat~="powerbi"]) {
+  display: none;
+}
+
+/* ---------- Info strip ---------- */
+.info-strip {
+  grid-column: 13 / 17;
+  grid-row: 1;
+  z-index: 1;
+  background: var(--green-900);
+  color: var(--green-050);
+  padding: var(--strip-pad);
+  display: flex;
+  flex-direction: column;
+  transition: opacity .3s var(--ease), transform .3s var(--ease);
+}
+.app:has(.project-radio:checked) .info-strip { opacity: 0; transform: translateX(16px); pointer-events: none; }
+
+.info-strip__profile { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.profile-photo {
+  width: 58px; height: 58px; flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid var(--green-500);
+  background: var(--green-700);
+  color: var(--green-100);
+  display: grid; place-items: center;
+}
+.profile-name { font-family: var(--font-serif); font-size: 1.4rem; font-weight: 600; color: #fff; line-height: 1.2; }
+.profile-title { font-size: .85rem; color: var(--green-200); margin-top: 3px; }
+
+.info-strip__bio { display: flex; flex-direction: column; gap: var(--space-3); }
+.info-strip__bio p { font-size: .85rem; line-height: 1.58; color: var(--green-050); opacity: .92; }
+
+.info-strip__contact { margin-top: auto; padding-top: var(--space-4); }
+.info-strip .divider { height: 1px; background: rgba(255, 255, 255, .16); margin-bottom: var(--space-3); }
+.contact-label { font-size: .78rem; font-weight: 600; color: var(--green-200); margin-bottom: var(--space-3); }
+.contact-icons { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.contact-icon {
+  position: relative; /* anchors the hover/focus tooltip below */
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: rgba(255, 255, 255, .08);
+  color: var(--green-100);
+  text-decoration: none;
+  transition: background .2s var(--ease), transform .15s var(--ease);
+}
+.contact-icon:hover { background: var(--green-600); transform: translateY(-2px); }
+
+/* Name-on-hover tooltip, so an icon nobody recognizes still identifies
+   itself. Reuses the link's own aria-label text via attr() rather than
+   duplicating it anywhere. */
+.contact-icon::after {
+  content: attr(aria-label);
+  position: absolute;
+  bottom: calc(100% + 9px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background: var(--ink-900);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 4px 9px;
+  border-radius: var(--radius-sm);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s var(--ease), transform .15s var(--ease);
+  z-index: 30;
+}
+.contact-icon::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--ink-900);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s var(--ease);
+  z-index: 30;
+}
+.contact-icon:hover::after, .contact-icon:focus-visible::after,
+.contact-icon:hover::before, .contact-icon:focus-visible::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ==========================================================================
+   PROJECT DETAIL PANELS
+   ========================================================================== */
+.detail-panels {
+  grid-column: 1 / 9;
+  grid-row: 1;
+  position: relative;
+  z-index: 10;
+  pointer-events: none;
+}
+.detail-panel {
+  position: absolute;
+  inset: 0;
+  background: var(--paper);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  box-shadow: var(--shadow-lg);
+  overflow-y: auto;
+  transform: translateX(-100%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: transform .45s var(--ease), opacity .3s var(--ease), visibility 0s linear .45s;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.detail-panel::-webkit-scrollbar { width: 8px; }
+.detail-panel::-webkit-scrollbar-track { background: transparent; }
+.detail-panel::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 8px; }
+
+.app:has(#project-1:checked) #detail-1,
+.app:has(#project-2:checked) #detail-2,
+.app:has(#project-3:checked) #detail-3,
+.app:has(#project-4:checked) #detail-4,
+.app:has(#project-5:checked) #detail-5,
+.app:has(#project-6:checked) #detail-6,
+.app:has(#project-7:checked) #detail-7,
+.app:has(#project-8:checked) #detail-8 {
+  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: transform .45s var(--ease), opacity .3s var(--ease), visibility 0s linear 0s;
+}
+/* Add a project 9+? Add its id to the two selector lists above (this file)
+   and the matching block in index.html — see comments there. */
+
+/* No max-width here on purpose: the panel is already only ~half the
+   viewport, and capping the content narrower than that (as an earlier
+   version did) left a large, un-symmetric empty gap on the right. Equal
+   left/right padding on the full width keeps it both fuller and symmetric. */
+.detail-panel__inner { padding: var(--space-6); }
+.detail-panel__header { position: relative; margin-bottom: var(--space-5); }
+.detail-panel__close {
+  position: absolute; top: 0; right: 0;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--silver-100);
+  color: var(--ink-700);
+  cursor: pointer;
+  transition: background .2s var(--ease);
+}
+.detail-panel__close:hover { background: var(--silver-200); }
+.detail-panel__close:has(.sr-only-input:focus-visible) { outline: 2.5px solid var(--green-600); outline-offset: 2px; }
+
+.detail-panel__icons { display: flex; gap: 6px; margin-bottom: var(--space-3); }
+.detail-panel__icons svg { border-radius: 7px; }
+.detail-panel__title {
+  font-family: var(--font-serif); font-size: 1.55rem; font-weight: 600;
+  color: var(--ink-900); line-height: 1.25;
+  margin-bottom: var(--space-4);
+  padding-right: 40px;
+}
+.detail-panel__downloads { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .8rem; font-weight: 600;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .2s var(--ease), border-color .2s var(--ease), color .2s var(--ease);
+}
+.btn--ghost { background: var(--paper); border: 1.4px solid var(--border-strong); color: var(--ink-700); }
+.btn--ghost:hover { border-color: var(--green-600); color: var(--green-800); }
+
+/* Download buttons: click-triggered sweep + spin "confirmation" animation.
+   See the long comment at the top of this file (§5) for exactly what this
+   can and can't do in pure CSS, and why. */
+.btn--download {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--paper);
+  border: 1.4px solid var(--border-strong);
+  color: var(--ink-700);
+}
+.btn--download:hover { border-color: var(--green-600); }
+.btn--download:visited { background: var(--green-600); border-color: var(--green-600); color: #fff; }
+.btn__fill {
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  background: var(--green-600);
+  z-index: 0;
+}
+.btn--download:focus .btn__fill { animation: btn-sweep 1.1s var(--ease) forwards; }
+.btn__content {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color .3s var(--ease) .15s;
+}
+.btn--download:focus .btn__content { color: #fff; }
+.btn__icon { flex-shrink: 0; }
+.btn--download:focus .btn__icon { animation: btn-spin 1.1s linear; }
+@keyframes btn-sweep { from { width: 0%; } to { width: 100%; } }
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+
+.detail-panel__body p { font-size: .92rem; line-height: 1.68; color: var(--ink-700); margin-bottom: var(--space-4); }
+
+/* Flexible so each project can show however many images it actually has —
+   one, two, three, whatever — without the grid assuming a fixed count. */
+.detail-panel__media {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3);
+  margin: var(--space-5) 0;
+}
+.media-placeholder {
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-md);
+  background: repeating-linear-gradient(135deg, var(--silver-100), var(--silver-100) 10px, var(--silver-200) 10px, var(--silver-200) 20px);
+  border: 1px dashed var(--border-strong);
+  display: grid; place-items: center;
+  color: var(--ink-500); font-size: .78rem; font-weight: 600; text-align: center; padding: var(--space-2);
+}
+.media-placeholder--gif {
+  aspect-ratio: 16 / 9;
+  margin-top: var(--space-3);
+  margin-bottom: var(--space-6); /* balances the panel's own top/side padding instead of sitting flush against the bottom edge */
+}
+
+/* ---------- Before / after comparison (used on a few projects only) ---------- */
+.before-after {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  margin: var(--space-5) 0;
+}
+.before-after__layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: var(--space-2) var(--space-3);
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--ink-500);
+  background: repeating-linear-gradient(135deg, var(--silver-100), var(--silver-100) 10px, var(--silver-200) 10px, var(--silver-200) 20px);
+}
+.before-after__layer--before {
+  background: repeating-linear-gradient(135deg, #eaf1ec, #eaf1ec 10px, #d9e6dc 10px, #d9e6dc 20px);
+}
+.before-after__clip {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  clip-path: inset(0 0 82% 0);
+  animation: reveal-slide 6s ease-in-out infinite alternate;
+}
+.before-after__line {
+  position: absolute;
+  left: 0; right: 0;
+  top: 18%;
+  height: 3px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(18, 52, 35, .2), 0 1px 5px rgba(18, 52, 35, .3);
+  z-index: 2;
+  animation: line-slide 6s ease-in-out infinite alternate;
+}
+.before-after__badge {
+  position: absolute;
+  z-index: 3;
+  font-size: .66rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background: rgba(18, 52, 35, .78);
+  color: #fff;
+  letter-spacing: .02em;
+}
+.before-after__badge--before { top: 8px; left: 8px; }
+.before-after__badge--after { bottom: 8px; left: 8px; }
+@keyframes reveal-slide {
+  0% { clip-path: inset(0 0 82% 0); }
+  100% { clip-path: inset(0 0 12% 0); }
+}
+@keyframes line-slide {
+  0% { top: 18%; }
+  100% { top: 88%; }
+}
+
+.detail-panel__process { margin-top: var(--space-5); padding-top: var(--space-5); border-top: 1px solid var(--border); }
+.detail-panel__process h3 { font-family: var(--font-serif); font-size: 1.1rem; color: var(--ink-900); margin-bottom: var(--space-2); }
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+@media (max-width: 960px) {
+  /* The no-scroll, one-viewport app shell is a desktop/tablet idea — on a
+     phone-width screen, cramming three full sections into one screen with
+     no scroll at all would force everything to be too small to use. Below
+     this width the page goes back to normal, natural scrolling. */
+  html, body { height: auto; overflow: visible; }
+  body:has(.project-radio:checked) { overflow: hidden; height: 100%; } /* still lock the background while the full-screen detail sheet is open */
+
+  .app { display: block; height: auto; }
+  .strip { height: auto; overflow-y: visible; }
+  .question-strip, .card-strip, .info-strip { grid-column: unset; }
+
+  .question-strip { border-right: none; border-bottom: 1px solid var(--border); }
+  .card-strip { transform: none !important; }
+
+  .card-grid { max-height: none; overflow-y: visible; }
+
+  .detail-panels { grid-column: unset; }
+  .detail-panel {
+    position: fixed;
+    inset: auto 0 0 0;
+    height: min(88vh, 720px);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    transform: translateY(100%);
+    z-index: 40;
+  }
+  .app:has(#project-1:checked) #detail-1,
+  .app:has(#project-2:checked) #detail-2,
+  .app:has(#project-3:checked) #detail-3,
+  .app:has(#project-4:checked) #detail-4,
+  .app:has(#project-5:checked) #detail-5,
+  .app:has(#project-6:checked) #detail-6,
+  .app:has(#project-7:checked) #detail-7,
+  .app:has(#project-8:checked) #detail-8 {
+    transform: translateY(0);
+  }
+  .app:has(.project-radio:checked) .card-strip,
+  .app:has(.project-radio:checked) .info-strip,
+  .app:has(.project-radio:checked) .question-strip {
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .question-strip, .card-strip, .info-strip { padding-left: var(--space-4); padding-right: var(--space-4); }
+  .card-grid { grid-template-columns: 1fr; }
+  .filter-group { gap: 6px; }
+  .profile-name { font-size: 1.3rem; }
+}
