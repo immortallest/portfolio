@@ -107,7 +107,7 @@
   /* Kept compact on purpose: the whole app is locked to one viewport with
      no page scroll (see "NO-SCROLL APP SHELL" below), so every strip has
      to earn its vertical space. */
-  --card-h: 170px;
+  --card-h: 160px;
   --grid-gap: 12px;
   --strip-pad: var(--space-5) var(--space-5) var(--space-4);
 }
