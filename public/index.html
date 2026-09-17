@@ -67,7 +67,8 @@
       <rect x="6.6" y="8.7" width="10.8" height="7.2" rx="1.1" fill="none" stroke="currentColor" stroke-width="1.2"/>
       <path d="M6.8 9.2l5.2 3.8 5.2-3.8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
-    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 11l4.5 4.5L16.5 11M5 19.5h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-dl-arrow" viewBox="0 0 24 16"><path d="M12 1v8M7 9l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-dl-base" viewBox="0 0 24 6"><line x1="5" y1="3" x2="19" y2="3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   </defs>
 </svg>
 
@@ -152,16 +153,19 @@
       <input type="radio" name="chat-mode" id="mode-chat" class="sr-only-input" tabindex="-1" aria-hidden="true">
 
       <div class="chat-panel">
-        <label class="return-to-faq" aria-label="Return to FAQ">
-          <input type="radio" name="chat-mode" id="mode-faq" class="sr-only-input">
-          <svg width="18" height="18"><use href="#icon-arrow-up"/></svg>
-        </label>
+        <div class="chat-panel__header">
+          <label class="return-to-faq" aria-label="Return to FAQ">
+            <input type="radio" name="chat-mode" id="mode-faq" class="sr-only-input">
+            <svg width="16" height="16"><use href="#icon-arrow-up"/></svg>
+          </label>
+        </div>
 
         <div class="chat-log" id="chat-log">
           <div class="chat-bubble chat-bubble--assistant">
             <p>Hi. Ask me anything, and I'll answer right away.</p>
           </div>
           <!--CHAT_LOG_END-->
+          <span id="chat-bottom" aria-hidden="true"></span>
         </div>
       </div>
 
@@ -214,8 +218,8 @@
       <label class="project-card" data-cat="excel powerbi">
         <input type="radio" name="project-select" id="project-1" class="project-radio">
         <span class="project-card__icons">
-          <svg width="22" height="12"><use href="#icon-excel"/></svg>
-          <svg width="22" height="12"><use href="#icon-powerbi"/></svg>
+          <svg width="22" height="22"><use href="#icon-excel"/></svg>
+          <svg width="22" height="22"><use href="#icon-powerbi"/></svg>
         </span>
         <h3 class="project-card__name">Regional Sales Performance Dashboard</h3>
         <p class="project-card__desc">An interactive dashboard tracking revenue, margin, and rep performance across five sales regions.</p>
@@ -229,8 +233,8 @@
       <label class="project-card" data-cat="python sql">
         <input type="radio" name="project-select" id="project-2" class="project-radio">
         <span class="project-card__icons">
-          <svg width="22" height="12"><use href="#icon-python"/></svg>
-          <svg width="22" height="12"><use href="#icon-sql"/></svg>
+          <svg width="22" height="22"><use href="#icon-python"/></svg>
+          <svg width="22" height="22"><use href="#icon-sql"/></svg>
         </span>
         <h3 class="project-card__name">Customer Churn Risk Model</h3>
         <p class="project-card__desc">A churn-prediction model that flags at-risk subscribers before they cancel.</p>
@@ -404,8 +408,8 @@
           </span>
           <h2 class="detail-panel__title">Regional Sales Performance Dashboard</h2>
           <div class="detail-panel__downloads">
-            <a class="btn btn--download" href="/downloads/01-raw-data.csv" download><svg class="btn__icon" width="15" height="15"><use href="#icon-download"/></svg> Download Raw Data</a>
-            <a class="btn btn--download" href="/downloads/01-processed-data.csv" download><svg class="btn__icon" width="15" height="15"><use href="#icon-download"/></svg> Download Processed Data</a>
+            <a class="btn btn--download" href="/downloads/01-raw-data.csv" download><span class="dl-icon" aria-hidden="true"><span class="dl-icon__track"><svg class="dl-icon__arrow dl-icon__arrow--a" width="15" height="10"><use href="#icon-dl-arrow"/></svg><svg class="dl-icon__arrow dl-icon__arrow--b" width="15" height="10"><use href="#icon-dl-arrow"/></svg></span><svg class="dl-icon__base" width="15" height="4"><use href="#icon-dl-base"/></svg></span> Download Raw Data</a>
+            <a class="btn btn--download" href="/downloads/01-processed-data.csv" download><span class="dl-icon" aria-hidden="true"><span class="dl-icon__track"><svg class="dl-icon__arrow dl-icon__arrow--a" width="15" height="10"><use href="#icon-dl-arrow"/></svg><svg class="dl-icon__arrow dl-icon__arrow--b" width="15" height="10"><use href="#icon-dl-arrow"/></svg></span><svg class="dl-icon__base" width="15" height="4"><use href="#icon-dl-base"/></svg></span> Download Processed Data</a>
           </div>
         </header>
         <div class="detail-panel__body">
@@ -451,8 +455,8 @@
           </span>
           <h2 class="detail-panel__title">Customer Churn Risk Model</h2>
           <div class="detail-panel__downloads">
-            <a class="btn btn--download" href="/downloads/02-raw-data.csv" download><svg class="btn__icon" width="15" height="15"><use href="#icon-download"/></svg> Download Raw Data</a>
-            <a class="btn btn--download" href="/downloads/02-processed-data.csv" download><svg class="btn__icon" width="15" height="15"><use href="#icon-download"/></svg> Download Processed Data</a>
+            <a class="btn btn--download" href="/downloads/02-raw-data.csv" download><span class="dl-icon" aria-hidden="true"><span class="dl-icon__track"><svg class="dl-icon__arrow dl-icon__arrow--a" width="15" height="10"><use href="#icon-dl-arrow"/></svg><svg class="dl-icon__arrow dl-icon__arrow--b" width="15" height="10"><use href="#icon-dl-arrow"/></svg></span><svg class="dl-icon__base" width="15" height="4"><use href="#icon-dl-base"/></svg></span> Download Raw Data</a>
+            <a class="btn btn--download" href="/downloads/02-processed-data.csv" download><span class="dl-icon" aria-hidden="true"><span class="dl-icon__track"><svg class="dl-icon__arrow dl-icon__arrow--a" width="15" height="10"><use href="#icon-dl-arrow"/></svg><svg class="dl-icon__arrow dl-icon__arrow--b" width="15" height="10"><use href="#icon-dl-arrow"/></svg></span><svg class="dl-icon__base" width="15" height="4"><use href="#icon-dl-base"/></svg></span> Download Processed Data</a>
           </div>
         </header>
         <div class="detail-panel__body">
@@ -485,8 +489,8 @@
           </span>
           <h2 class="detail-panel__title">Marketing Campaign ROI Tracker</h2>
           <div class="detail-panel__downloads">
-            <a class="btn btn--download" href="/downloads/03-raw-data.csv" download><svg class="btn__icon" width="15" height="15"><use href="#icon-download"/></svg> Download Raw Data</a>
-            <a class="btn btn--download" href="/downloads/03-processed-data.csv" download><svg class="btn__icon" width="15" height="15"><use href="#icon-download"/></svg> Download Processed Data</a>
+            <a class="btn btn--download" href="/downloads/03-raw-data.csv" download><span class="dl-icon" aria-hidden="true"><span class="dl-icon__track"><svg class="dl-icon__arrow dl-icon__arrow--a" width="15" height="10"><use href="#icon-dl-arrow"/></svg><svg class="dl-icon__arrow dl-icon__arrow--b" width="15" height="10"><use href="#icon-dl-arrow"/></svg></span><svg class="dl-icon__base" width="15" height="4"><use href="#icon-dl-base"/></svg></span> Download Raw Data</a>
+            <a class="btn btn--download" href="/downloads/03-processed-data.csv" download><span class="dl-icon" aria-hidden="true"><span class="dl-icon__track"><svg class="dl-icon__arrow dl-icon__arrow--a" width="15" height="10"><use href="#icon-dl-arrow"/></svg><svg class="dl-icon__arrow dl-icon__arrow--b" width="15" height="10"><use href="#icon-dl-arrow"/></svg></span><svg class="dl-icon__base" width="15" height="4"><use href="#icon-dl-base"/></svg></span> Download Processed Data</a>
           </div>
         </header>
         <div class="detail-panel__body">
@@ -520,8 +524,8 @@
           </span>
           <h2 class="detail-panel__title">Inventory Demand Forecast</h2>
           <div class="detail-panel__downloads">
-            <a class="btn btn--download" href="/downloads/04-raw-data.csv" download><svg class="btn__icon" width="15" height="15"><use href="#icon-download"/></svg> Download Raw Data</a>
-            <a class="btn btn--download" href="/downloads/04-processed-data.csv" download><svg class="btn__icon" width="15" height="15"><use href="#icon-download"/></svg> Download Processed Data</a>
+            <a class="btn btn--download" href="/downloads/04-raw-data.csv" download><span class="dl-icon" aria-hidden="true"><span class="dl-icon__track"><svg class="dl-icon__arrow dl-icon__arrow--a" width="15" height="10"><use href="#icon-dl-arrow"/></svg><svg class="dl-icon__arrow dl-icon__arrow--b" width="15" height="10"><use href="#icon-dl-arrow"/></svg></span><svg class="dl-icon__base" width="15" height="4"><use href="#icon-dl-base"/></svg></span> Download Raw Data</a>
+            <a class="btn btn--download" href="/downloads/04-processed-data.csv" download><span class="dl-icon" aria-hidden="true"><span class="dl-icon__track"><svg class="dl-icon__arrow dl-icon__arrow--a" width="15" height="10"><use href="#icon-dl-arrow"/></svg><svg class="dl-icon__arrow dl-icon__arrow--b" width="15" height="10"><use href="#icon-dl-arrow"/></svg></span><svg class="dl-icon__base" width="15" height="4"><use href="#icon-dl-base"/></svg></span> Download Processed Data</a>
           </div>
         </header>
         <div class="detail-panel__body">
@@ -559,8 +563,8 @@
           </span>
           <h2 class="detail-panel__title">Automated Monthly Finance Report</h2>
           <div class="detail-panel__downloads">
-            <a class="btn btn--download" href="/downloads/05-raw-data.csv" download><svg class="btn__icon" width="15" height="15"><use href="#icon-download"/></svg> Download Raw Data</a>
-            <a class="btn btn--download" href="/downloads/05-processed-data.csv" download><svg class="btn__icon" width="15" height="15"><use href="#icon-download"/></svg> Download Processed Data</a>
+            <a class="btn btn--download" href="/downloads/05-raw-data.csv" download><span class="dl-icon" aria-hidden="true"><span class="dl-icon__track"><svg class="dl-icon__arrow dl-icon__arrow--a" width="15" height="10"><use href="#icon-dl-arrow"/></svg><svg class="dl-icon__arrow dl-icon__arrow--b" width="15" height="10"><use href="#icon-dl-arrow"/></svg></span><svg class="dl-icon__base" width="15" height="4"><use href="#icon-dl-base"/></svg></span> Download Raw Data</a>
+            <a class="btn btn--download" href="/downloads/05-processed-data.csv" download><span class="dl-icon" aria-hidden="true"><span class="dl-icon__track"><svg class="dl-icon__arrow dl-icon__arrow--a" width="15" height="10"><use href="#icon-dl-arrow"/></svg><svg class="dl-icon__arrow dl-icon__arrow--b" width="15" height="10"><use href="#icon-dl-arrow"/></svg></span><svg class="dl-icon__base" width="15" height="4"><use href="#icon-dl-base"/></svg></span> Download Processed Data</a>
           </div>
         </header>
         <div class="detail-panel__body">
@@ -592,8 +596,8 @@
           </span>
           <h2 class="detail-panel__title">Website Funnel Analysis</h2>
           <div class="detail-panel__downloads">
-            <a class="btn btn--download" href="/downloads/06-raw-data.csv" download><svg class="btn__icon" width="15" height="15"><use href="#icon-download"/></svg> Download Raw Data</a>
-            <a class="btn btn--download" href="/downloads/06-processed-data.csv" download><svg class="btn__icon" width="15" height="15"><use href="#icon-download"/></svg> Download Processed Data</a>
+            <a class="btn btn--download" href="/downloads/06-raw-data.csv" download><span class="dl-icon" aria-hidden="true"><span class="dl-icon__track"><svg class="dl-icon__arrow dl-icon__arrow--a" width="15" height="10"><use href="#icon-dl-arrow"/></svg><svg class="dl-icon__arrow dl-icon__arrow--b" width="15" height="10"><use href="#icon-dl-arrow"/></svg></span><svg class="dl-icon__base" width="15" height="4"><use href="#icon-dl-base"/></svg></span> Download Raw Data</a>
+            <a class="btn btn--download" href="/downloads/06-processed-data.csv" download><span class="dl-icon" aria-hidden="true"><span class="dl-icon__track"><svg class="dl-icon__arrow dl-icon__arrow--a" width="15" height="10"><use href="#icon-dl-arrow"/></svg><svg class="dl-icon__arrow dl-icon__arrow--b" width="15" height="10"><use href="#icon-dl-arrow"/></svg></span><svg class="dl-icon__base" width="15" height="4"><use href="#icon-dl-base"/></svg></span> Download Processed Data</a>
           </div>
         </header>
         <div class="detail-panel__body">
@@ -626,8 +630,8 @@
           </span>
           <h2 class="detail-panel__title">Employee Attrition Study</h2>
           <div class="detail-panel__downloads">
-            <a class="btn btn--download" href="/downloads/07-raw-data.csv" download><svg class="btn__icon" width="15" height="15"><use href="#icon-download"/></svg> Download Raw Data</a>
-            <a class="btn btn--download" href="/downloads/07-processed-data.csv" download><svg class="btn__icon" width="15" height="15"><use href="#icon-download"/></svg> Download Processed Data</a>
+            <a class="btn btn--download" href="/downloads/07-raw-data.csv" download><span class="dl-icon" aria-hidden="true"><span class="dl-icon__track"><svg class="dl-icon__arrow dl-icon__arrow--a" width="15" height="10"><use href="#icon-dl-arrow"/></svg><svg class="dl-icon__arrow dl-icon__arrow--b" width="15" height="10"><use href="#icon-dl-arrow"/></svg></span><svg class="dl-icon__base" width="15" height="4"><use href="#icon-dl-base"/></svg></span> Download Raw Data</a>
+            <a class="btn btn--download" href="/downloads/07-processed-data.csv" download><span class="dl-icon" aria-hidden="true"><span class="dl-icon__track"><svg class="dl-icon__arrow dl-icon__arrow--a" width="15" height="10"><use href="#icon-dl-arrow"/></svg><svg class="dl-icon__arrow dl-icon__arrow--b" width="15" height="10"><use href="#icon-dl-arrow"/></svg></span><svg class="dl-icon__base" width="15" height="4"><use href="#icon-dl-base"/></svg></span> Download Processed Data</a>
           </div>
         </header>
         <div class="detail-panel__body">
@@ -660,8 +664,8 @@
           </span>
           <h2 class="detail-panel__title">Supply Chain KPI Tracker</h2>
           <div class="detail-panel__downloads">
-            <a class="btn btn--download" href="/downloads/08-raw-data.csv" download><svg class="btn__icon" width="15" height="15"><use href="#icon-download"/></svg> Download Raw Data</a>
-            <a class="btn btn--download" href="/downloads/08-processed-data.csv" download><svg class="btn__icon" width="15" height="15"><use href="#icon-download"/></svg> Download Processed Data</a>
+            <a class="btn btn--download" href="/downloads/08-raw-data.csv" download><span class="dl-icon" aria-hidden="true"><span class="dl-icon__track"><svg class="dl-icon__arrow dl-icon__arrow--a" width="15" height="10"><use href="#icon-dl-arrow"/></svg><svg class="dl-icon__arrow dl-icon__arrow--b" width="15" height="10"><use href="#icon-dl-arrow"/></svg></span><svg class="dl-icon__base" width="15" height="4"><use href="#icon-dl-base"/></svg></span> Download Raw Data</a>
+            <a class="btn btn--download" href="/downloads/08-processed-data.csv" download><span class="dl-icon" aria-hidden="true"><span class="dl-icon__track"><svg class="dl-icon__arrow dl-icon__arrow--a" width="15" height="10"><use href="#icon-dl-arrow"/></svg><svg class="dl-icon__arrow dl-icon__arrow--b" width="15" height="10"><use href="#icon-dl-arrow"/></svg></span><svg class="dl-icon__base" width="15" height="4"><use href="#icon-dl-base"/></svg></span> Download Processed Data</a>
           </div>
         </header>
         <div class="detail-panel__body">

@@ -30,7 +30,7 @@ binding = "AI"
 # then paste the "id" it prints into the line below. See README.md.
 [[kv_namespaces]]
 binding = "CHAT_SESSIONS"
-id = "76c6a6b44f7c4e7d851a46d5dacb29de"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
 
 # Cron Trigger — runs src/scheduled.js every 10 minutes to find
 # conversations that have gone quiet, send their full transcript to

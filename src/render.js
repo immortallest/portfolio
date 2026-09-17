@@ -9,7 +9,12 @@
  *   1. Mark the #mode-chat radio as checked, so the chat panel renders
  *      open on the page the Worker returns (see public/styles.css — the
  *      panel opens via :has(#chat-input:focus, #mode-chat:checked)).
- *   2. Insert every stored message bubble, in order, just before the
+ *   2. Give the chat text input `autofocus`, so a visitor can keep
+ *      typing their next question immediately, without re-clicking the
+ *      field — a real HTML attribute, no JS involved. This only
+ *      happens on the rendered /chat page, never on the plain static
+ *      homepage, so arriving at the site fresh never steals focus.
+ *   3. Insert every stored message bubble, in order, just before the
  *      <!--CHAT_LOG_END--> marker inside #chat-log — so the visitor
  *      sees the whole conversation so far, not just the latest answer.
  *
@@ -20,6 +25,7 @@
  */
 
 const MODE_CHAT_MARKER = 'id="mode-chat" class="sr-only-input" tabindex="-1" aria-hidden="true"';
+const CHAT_INPUT_MARKER = 'id="chat-input" placeholder="Ask anything…" autocomplete="off" required maxlength="400"';
 const CHAT_LOG_MARKER = "<!--CHAT_LOG_END-->";
 
 /** Escapes text for safe insertion into HTML (prevents markup/script injection). */
@@ -41,11 +47,15 @@ export function renderChatHistory(html, messages) {
   if (!html.includes(MODE_CHAT_MARKER)) {
     throw new Error("render.js: mode-chat marker not found — did index.html change?");
   }
+  if (!html.includes(CHAT_INPUT_MARKER)) {
+    throw new Error("render.js: chat-input marker not found — did index.html change?");
+  }
   if (!html.includes(CHAT_LOG_MARKER)) {
     throw new Error("render.js: chat-log marker not found — did index.html change?");
   }
 
   let out = html.replace(MODE_CHAT_MARKER, `${MODE_CHAT_MARKER} checked`);
+  out = out.replace(CHAT_INPUT_MARKER, `${CHAT_INPUT_MARKER} autofocus`);
 
   const bubblesHtml = (messages || [])
     .map((m) => {

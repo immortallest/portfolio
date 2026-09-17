@@ -67,7 +67,7 @@ export async function handleAsk(request, env, ctx) {
 
   await saveHistory(env, sessionId, existing);
 
-  const redirectUrl = new URL("/chat", request.url);
+  const redirectUrl = new URL("/chat#chat-bottom", request.url);
   const res = new Response(null, { status: 303, headers: { Location: redirectUrl.toString() } });
   if (setCookie) res.headers.append("Set-Cookie", setCookie);
   return res;

@@ -66,9 +66,22 @@ Worth knowing if you're editing this:
 - **The before/after image comparisons** (used on a couple of
   projects) are a looping `clip-path` + `animation` pair — no
   interaction needed, it just plays.
-- **The download buttons'** one-second icon spin on click is a fixed
-  confirmation animation, not a progress bar — pure CSS genuinely
-  cannot observe a real file download's progress.
+- **The download buttons'** falling-arrow loop on click (the arrow drops
+  through the baseline and a new one drops in from above to replace it)
+  is a fixed confirmation animation, not a progress bar — pure CSS
+  genuinely cannot observe a real file download's progress.
+
+**Genuinely not possible without JavaScript** (not a "closest
+approximation" situation — there's no partial-credit CSS version of
+these): updating only the chat panel instead of the whole page
+reloading when a message is sent; a "typing…" indicator shown *while*
+waiting for the model's answer (CSS can't react to an in-flight
+request it has no way to observe); and the sent/received messages
+animating into place as distinct events from the page simply finishing
+its load. All of these require intercepting the form and fetching in
+the background — if that trade-off (a little JS, in exchange for that
+app-like feel) becomes worth it, this is the one part of the project
+where it would actually matter.
 
 ## 3. How the chat remembers a conversation (no JavaScript)
 

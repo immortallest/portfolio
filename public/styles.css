@@ -18,16 +18,21 @@
                             by .faq-list below for why).
    2. FAQ <-> Chat panel -> .question-strip:has(#chat-input:focus, #mode-chat:checked)
                             #chat-input:focus covers the "as you click into the
-                            field" live preview. #mode-chat:checked covers the
-                            persistent state after the Worker re-renders this
-                            page with the conversation (see src/render.js).
-                            KNOWN LIMITATION: if a person focuses the input,
-                            the panel opens as a preview, and they click away
-                            WITHOUT submitting and WITHOUT pressing "return to
-                            FAQ", the panel closes on its own (focus-driven).
-                            This is the closest reliable pure-CSS behaviour;
-                            a JS build could pin the open state independent of
-                            focus.
+                            field" live preview, and also fires the moment the
+                            chat page loads (the input has native `autofocus`
+                            there — see src/render.js). #mode-chat:checked
+                            covers the persistent state after that. The
+                            return-to-FAQ button lives in its own always-in-flow
+                            .chat-panel__header, ABOVE the scrollable .chat-log
+                            — not floated over it — so it can never overlap or
+                            intercept clicks meant for the log, and it never
+                            scrolls out of reach. KNOWN LIMITATION: if a person
+                            focuses the input, the panel opens as a preview, and
+                            they click away WITHOUT submitting and WITHOUT
+                            pressing "return to FAQ", the panel closes on its
+                            own (focus-driven). This is the closest reliable
+                            pure-CSS behaviour; a JS build could pin the open
+                            state independent of focus.
    3. Category filter    -> .app:has(#filter-*:checked) toggles visibility of
                             non-matching .project-card elements and highlights
                             the matching .tag. A dedicated, always-tabbable
@@ -42,11 +47,26 @@
                             grid — radios can't be unchecked by re-clicking,
                             so closing means selecting a different, inert
                             option in the same group.
-   5. Download buttons    -> A one-second icon spin plays on :focus (which a
+   5. Download buttons    -> A falling-arrow loop plays on :focus (which a
                             click reliably gives the link), purely to confirm
                             the click registered — pure CSS cannot observe a
                             real file download's actual progress, so this
                             doesn't try to fake one.
+
+   A NOTE ON WHAT'S GENUINELY NOT POSSIBLE HERE: a few reasonable-sounding
+   chat requests hit a real wall, not a "closest approximation" situation —
+   there's no partial CSS/HTML equivalent at all, because they all depend
+   on avoiding a full page navigation while still talking to the server:
+     - Updating only the chat panel when a message is sent, instead of the
+       whole page reloading.
+     - A "typing…" indicator shown WHILE waiting for the model's answer —
+       CSS can only react to a state that already exists; it can't react to
+       an in-flight network request it has no way to observe.
+     - The sent message animating up into place, or the incoming answer
+       sliding in, as separate events from the page simply finishing loading.
+   Every one of these requires JavaScript (to intercept the form, fetch()
+   in the background, and update the DOM without navigating) — there's no
+   partial-credit pure-CSS version, unlike the other mechanisms above.
    ========================================================================== */
 
 /* ---------- Design tokens ---------- */
@@ -310,28 +330,37 @@ input { font: inherit; color: inherit; }
 
 .question-strip__chat { display: flex; flex-direction: column; margin-top: auto; }
 
+/* Rebuilt as a plain flex column with a max-height collapse — simpler and
+   more robust than an earlier version's CSS-grid 0fr trick, which could
+   leave a sliver of content visible/clickable when "closed" in some
+   browsers. The header (with the return-to-FAQ button) is now a normal,
+   in-flow sibling ABOVE .chat-log rather than absolutely positioned over
+   it, so it can never overlap or intercept clicks meant for the log below
+   it, and it never scrolls out of view — only .chat-log itself scrolls. */
 .chat-panel {
-  position: relative;
-  display: grid;
-  grid-template-rows: 0fr;
-  overflow: hidden; /* BUG FIX: without this, the absolutely-positioned
-    .return-to-faq button below was never actually clipped when the panel
-    was collapsed to 0 height, so it stayed visible (and mispositioned)
-    even in plain FAQ mode. Clipping the collapsed box hides it correctly,
-    and it reappears — correctly pinned top-right of the chat panel — only
-    once the panel expands in chat mode. */
-  transition: grid-template-rows .35s var(--ease);
+  display: flex;
+  flex-direction: column;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height .35s var(--ease);
 }
 .question-strip:has(#chat-input:focus, #mode-chat:checked) .chat-panel {
-  grid-template-rows: 1fr;
+  max-height: 520px;
+}
+.chat-panel__header {
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+  padding-bottom: var(--space-2);
 }
 .chat-log {
-  overflow: hidden auto;
+  flex: 1;
   min-height: 0;
+  overflow: hidden auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  padding: var(--space-2) var(--space-7) var(--space-2) 0;
+  padding: 0 var(--space-2) var(--space-2) 0;
 }
 .chat-bubble {
   max-width: 94%;
@@ -354,12 +383,8 @@ input { font: inherit; color: inherit; }
   align-self: flex-end;
 }
 
-/* Only ever visible inside the chat panel itself (see the overflow:hidden
-   fix above) — top-right of that panel, as requested. */
 .return-to-faq {
-  position: absolute;
-  top: 0; right: 0;
-  width: 34px; height: 34px;
+  width: 30px; height: 30px;
   display: grid;
   place-items: center;
   background: var(--green-050);
@@ -721,13 +746,26 @@ input { font: inherit; color: inherit; }
 .btn--download { background: var(--paper); border: 1.4px solid var(--border-strong); color: var(--ink-700); }
 .btn--download:hover { border-color: var(--green-600); color: var(--green-800); }
 
-/* Download buttons: a single one-second icon spin plays on click, purely
-   to confirm the button worked — not a progress indicator. Pure CSS has no
-   way to observe a real file download's actual progress (that needs JS +
-   the Fetch/XHR progress APIs), so this intentionally doesn't try to fake
-   one; it's just a brief, honest "got it" cue. */
-.btn--download:focus .btn__icon { animation: btn-spin 1s linear; }
-@keyframes btn-spin { to { transform: rotate(360deg); } }
+/* Download buttons: clicking makes the arrow fall down through the
+   baseline and disappear, while a second arrow simultaneously falls in
+   from above to take its place — like the line beneath it is a portal
+   to the top. .dl-icon__track is a clipped one-arrow-tall window; the
+   two arrow copies inside it both animate downward by exactly that
+   height at once, so one drops out the bottom right as the other
+   drops in from the top. This is a confirmation cue, not a progress
+   bar — pure CSS has no way to observe a real download's actual
+   progress. */
+.dl-icon { display: inline-flex; flex-direction: column; align-items: center; }
+.dl-icon__track { position: relative; width: 15px; height: 10px; overflow: hidden; }
+.dl-icon__arrow { position: absolute; left: 0; top: 0; }
+.dl-icon__arrow--a { transform: translateY(-10px); }
+.dl-icon__arrow--b { transform: translateY(0); }
+.dl-icon__base { margin-top: 1px; flex-shrink: 0; }
+
+.btn--download:focus .dl-icon__arrow--a { animation: dl-fall-in 1s linear forwards; }
+.btn--download:focus .dl-icon__arrow--b { animation: dl-fall-out 1s linear forwards; }
+@keyframes dl-fall-in { from { transform: translateY(-10px); } to { transform: translateY(0); } }
+@keyframes dl-fall-out { from { transform: translateY(0); } to { transform: translateY(10px); } }
 
 .detail-panel__body p { font-size: .92rem; line-height: 1.68; color: var(--ink-700); margin-bottom: var(--space-4); }
 
