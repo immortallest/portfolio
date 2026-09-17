@@ -345,7 +345,7 @@ input { font: inherit; color: inherit; }
   transition: max-height .35s var(--ease);
 }
 .question-strip:has(#chat-input:focus, #mode-chat:checked) .chat-panel {
-  max-height: 750px;
+  max-height: 620px;
 }
 .chat-panel__header {
   display: flex;
