@@ -1,10 +1,12 @@
 # Nora Callahan — Data Analyst Portfolio
 
-A portfolio site built to the spec in `Vision.md`: pure HTML/CSS on the
-frontend (no client-side JavaScript, anywhere) and a single Cloudflare
-Worker on the backend for the AI chat, its conversation memory, and
-Telegram notifications — serving the static site via Workers Static
-Assets.
+A portfolio site built to the spec in `Vision.md`: pure HTML/CSS for
+almost everything, with one small, isolated exception — a bit of
+JavaScript for the chat interaction specifically (async sending, a
+typing indicator, message animations; see §2 below for exactly why
+that one part needed it) — plus a single Cloudflare Worker on the
+backend for the AI chat, its conversation memory, and Telegram
+notifications, serving the static site via Workers Static Assets.
 
 All the personal content in here — the name, bio, FAQ answers, and all
 eight projects — is realistic **placeholder** content for you to
@@ -18,15 +20,17 @@ replace. Nothing here is real client work.
 public/
   index.html                 the whole site — one page
   styles.css                 all styling and every interaction's CSS
+  chat.js                    the one JS file on the site — chat only, see §2
 src/
-  index.js                   Worker entry point — routes /api/ask and /chat, everything else falls through to the static files
-  ask-handler.js             handles the chat form submission
-  chat-page-handler.js       renders the conversation so far (GET /chat)
+  index.js                   Worker entry point — routes /api/ask, /api/history, and /chat; everything else falls through to the static files
+  ask-handler.js             handles the chat form submission (JSON reply for chat.js, full-page redirect as a no-JS fallback)
+  history-handler.js         lets chat.js restore a conversation already in progress (e.g. after a refresh)
+  chat-page-handler.js       renders the conversation so far — the no-JS fallback path (GET /chat)
   session.js                 cookie-based session id + KV read/write helpers
   scheduled.js               the cron job that closes out quiet conversations
   context.js                 EDIT THIS: what the AI knows about you
   telegram.js                sends the full-conversation digest
-  render.js                  splices the chat history into a copy of index.html
+  render.js                  splices the chat history into a copy of index.html (fallback path only)
 wrangler.toml                 Cloudflare config (entry point, assets, AI + KV bindings, cron)
 package.json
 ```
@@ -35,65 +39,78 @@ package.json
 against Cloudflare Pages Functions, but Cloudflare has been folding
 Pages into a unified **Workers + Static Assets** model, and that's
 what this project now targets — a single Worker (`src/index.js`) that
-serves `public/` as static files and only runs code for its two
-dynamic routes. If your Cloudflare dashboard project runs
-`wrangler deploy` (not `wrangler pages deploy`), this is the right
-model for it.
+serves `public/` as static files and only runs code for its dynamic
+routes. If your Cloudflare dashboard project runs `wrangler deploy`
+(not `wrangler pages deploy`), this is the right model for it.
 
-## 2. How the interactivity works with zero JavaScript
+## 2. How the interactivity works — one JS file, everything else without it
 
-Every dynamic behaviour — the FAQ accordion, the FAQ ↔ chat transition,
-category filtering, and the project detail view — is built from native
-HTML controls (`<details>`, radio buttons) combined with the modern
-CSS `:has()` selector, which lets an element react to a descendant's
-state. There's a full explanation of the mechanism at the top of
-`public/styles.css`, and inline comments at each `:has()` rule.
+Every feature *except the chat* — the FAQ accordion, the FAQ ↔ chat
+visibility toggle, category filtering, and the project detail view —
+is built from native HTML controls (`<details>`, radio buttons)
+combined with the modern CSS `:has()` selector, which lets an element
+react to a descendant's state, with zero JavaScript. There's a full
+explanation of the mechanism at the top of `public/styles.css`, and
+inline comments at each `:has()` rule.
+
+**`public/chat.js`** is the one exception, and it's deliberately small
+and scoped to only the chat form — it never touches the FAQ, filter,
+or project-detail markup. It exists because a handful of things are
+genuinely impossible in pure CSS/HTML, not just inconvenient: sending
+a message without reloading the whole page, showing a "typing…"
+indicator while the model is still working (CSS can't react to an
+in-flight request it has no way to observe), animating a new message
+into place as its own event, and keeping focus in the input after
+sending. See the comment at the top of that file for the full
+reasoning.
+
+**Progressive enhancement, not a hard dependency:** the chat `<form>`
+still has a real `action="/api/ask" method="POST"` and works
+completely on its own — a full page reload per message — if
+`chat.js` fails to load or JavaScript is disabled. `src/ask-handler.js`
+serves both paths from the same endpoint, branching on the request's
+`Accept` header: `chat.js`'s `fetch()` calls ask for
+`application/json` and get a fast `{ answer }` reply; a plain HTML
+form submission gets the old redirect-based full-page flow instead
+(`src/chat-page-handler.js`) — so the site keeps working even if this
+one script doesn't run.
 
 Worth knowing if you're editing this:
 
 - **The FAQ items** all share `name="faq-accordion"`, which is a real,
   fairly recent native HTML feature: the browser itself enforces "only
   one open at a time." The one thing that's genuinely not possible
-  without JavaScript is closing the open item when you click *anywhere
-  else on the page* — there's no CSS selector for "a click happened
-  outside this element" (see the comment above `.faq-list`).
-- **The chat panel's live preview** opens as soon as you focus the
-  question field, and if you click away *before* submitting and
-  *without* pressing "return to FAQ", it closes again — pure CSS can't
-  pin a state open independent of focus without a real form
-  submission. Once a question is actually submitted, the panel is held
-  open by a checked radio instead, which has no such limitation.
+  without JavaScript — and this part deliberately stays JS-free, so
+  the limitation stands — is closing the open item when you click
+  *anywhere else on the page*; there's no CSS selector for "a click
+  happened outside this element" (see the comment above `.faq-list`).
+- **The return-to-FAQ button** is a sibling of the chat panel, not
+  nested inside it — see the HTML comment above it. It fades in and
+  out on the same trigger as the panel (so the two appear together),
+  but floats above it as its own independent element.
 - **The before/after image comparisons** (used on a couple of
   projects) are a looping `clip-path` + `animation` pair — no
   interaction needed, it just plays.
-- **The download buttons'** falling-arrow loop on click (the arrow drops
-  through the baseline and a new one drops in from above to replace it)
-  is a fixed confirmation animation, not a progress bar — pure CSS
-  genuinely cannot observe a real file download's progress.
+- **The download buttons'** falling-arrow loop on click (the arrow
+  drops through the baseline and a new one drops in from above to
+  replace it) is a fixed confirmation animation, not a progress bar —
+  pure CSS genuinely cannot observe a real file download's progress.
 
-**Genuinely not possible without JavaScript** (not a "closest
-approximation" situation — there's no partial-credit CSS version of
-these): updating only the chat panel instead of the whole page
-reloading when a message is sent; a "typing…" indicator shown *while*
-waiting for the model's answer (CSS can't react to an in-flight
-request it has no way to observe); and the sent/received messages
-animating into place as distinct events from the page simply finishing
-its load. All of these require intercepting the form and fetching in
-the background — if that trade-off (a little JS, in exchange for that
-app-like feel) becomes worth it, this is the one part of the project
-where it would actually matter.
-
-## 3. How the chat remembers a conversation (no JavaScript)
+## 3. How the chat remembers a conversation
 
 This is the part worth understanding before you deploy, since it's the
-most involved piece of the backend.
+most involved piece of the backend. The storage mechanism below needs
+no JavaScript at all — it's built on cookies and server-side storage;
+`public/chat.js` (see §2) only changes *how* a turn gets delivered to
+the page, not how the conversation is remembered.
 
 **The problem:** a static page can't remember anything on its own, and
 without JavaScript there's no `fetch()`, no `localStorage`, nothing
 running in the browser between form submissions. The only piece of
 state a plain HTML site can lean on is an **HTTP cookie** — the
 browser sends it back automatically on every request, including a
-plain form submission, with zero JavaScript involved.
+plain form submission or a `fetch()` call, with or without JavaScript
+involved.
 
 **How it works:**
 
@@ -103,14 +120,18 @@ plain form submission, with zero JavaScript involved.
    in **Workers KV**, keyed by that session id — this is the
    "temporary storage in Cloudflare" the chat needs so the *model*
    can see prior turns too, not just so the page can display them.
-3. Instead of the form's `POST /api/ask` directly returning the answer
-   page, it **redirects** to `GET /chat`, which reads that session's
-   history from KV and renders the whole conversation. This fixes a
-   real bug: this project used to render the answer directly in
-   response to the POST, which meant *refreshing* the result page made
-   the browser resubmit that same question. A GET page can be
-   refreshed safely — nothing gets resubmitted or duplicated (this is
-   the standard "Post/Redirect/Get" pattern).
+3. `POST /api/ask` now answers in one of two ways (see §2): `chat.js`
+   gets a fast JSON `{ answer }` reply and updates the page itself. A
+   plain HTML form submission (no JS) instead gets **redirected** to
+   `GET /chat`, which reads that session's history from KV and renders
+   the whole conversation. That redirect exists to fix a real bug:
+   this project used to render the answer directly in response to the
+   POST, which meant *refreshing* the result page made the browser
+   resubmit that same question. A GET page can be refreshed safely —
+   nothing gets resubmitted or duplicated (the standard
+   "Post/Redirect/Get" pattern). `GET /api/history` serves the same
+   stored conversation as JSON, so `chat.js` can restore it into view
+   after a refresh too, without needing the redirect dance.
 4. Each new question sends the model the recent conversation as real
    context (capped at the last 12 messages — see
    `MAX_MESSAGES_FOR_MODEL` in `src/session.js` — so a long chat

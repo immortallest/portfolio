@@ -1,13 +1,22 @@
 /* ==========================================================================
    Nora Callahan — Data Analyst Portfolio
-   Pure HTML/CSS. No client-side JavaScript is used anywhere in this file.
+   Pure HTML/CSS, with ONE exception: public/chat.js, a small, isolated
+   script that enhances the chat form only (async sending, a typing
+   indicator, message animations, persistent input focus — see that
+   file's header comment for exactly why those specifically need it).
+   Every other feature on this page — the FAQ accordion, the FAQ<->chat
+   visibility toggle, category filtering, the project detail view — has
+   no JavaScript involved at all, and the chat form itself still works
+   completely on its own (a plain HTML POST, full page reload per
+   message) if chat.js fails to load or JS is disabled. Nothing below in
+   this file depends on chat.js being present.
 
    HOW THE INTERACTIVITY WORKS (read this before editing selectors)
    --------------------------------------------------------------------------
    Every interactive state is driven by native, keyboard-operable HTML
    controls (native <details>/<summary>, and radio <input>s) combined with
    the modern :has() relational selector, which lets a distant ancestor
-   react to a descendant's state. Nothing here relies on JavaScript.
+   react to a descendant's state.
 
    1. FAQ accordion      -> native <details name="faq-accordion">/<summary>.
                             Sharing one `name` makes the browser itself
@@ -15,24 +24,23 @@
                             native, not a CSS trick. What genuinely isn't
                             possible without JS: closing it when the user
                             clicks elsewhere on the page (see the comment
-                            by .faq-list below for why).
-   2. FAQ <-> Chat panel -> .question-strip:has(#chat-input:focus, #mode-chat:checked)
-                            #chat-input:focus covers the "as you click into the
-                            field" live preview, and also fires the moment the
-                            chat page loads (the input has native `autofocus`
-                            there — see src/render.js). #mode-chat:checked
-                            covers the persistent state after that. The
-                            return-to-FAQ button lives in its own always-in-flow
-                            .chat-panel__header, ABOVE the scrollable .chat-log
-                            — not floated over it — so it can never overlap or
-                            intercept clicks meant for the log, and it never
-                            scrolls out of reach. KNOWN LIMITATION: if a person
-                            focuses the input, the panel opens as a preview, and
-                            they click away WITHOUT submitting and WITHOUT
-                            pressing "return to FAQ", the panel closes on its
-                            own (focus-driven). This is the closest reliable
-                            pure-CSS behaviour; a JS build could pin the open
-                            state independent of focus.
+                            by .faq-list below for why) — this one stays
+                            pure CSS/HTML per its own scope, so that
+                            limitation stands.
+   2. FAQ <-> Chat panel -> .question-strip:has(#chat-input:focus, #mode-chat:checked),
+                            entirely CSS/HTML, not scripted. #chat-input:focus
+                            covers the "as you click into the field" preview
+                            (and chat.js calling .focus() after sending keeps
+                            it true for as long as you're actively chatting).
+                            #mode-chat:checked covers the persistent state
+                            for visitors without JS, set by the Worker when
+                            it re-renders the page as a fallback (see
+                            src/render.js). The return-to-FAQ button is a
+                            sibling of .chat-panel, not nested inside it —
+                            see the HTML comment above it — so the two fade
+                            in together but are independent elements; it
+                            floats above the panel rather than scrolling
+                            with its content.
    3. Category filter    -> .app:has(#filter-*:checked) toggles visibility of
                             non-matching .project-card elements and highlights
                             the matching .tag. A dedicated, always-tabbable
@@ -52,21 +60,6 @@
                             the click registered — pure CSS cannot observe a
                             real file download's actual progress, so this
                             doesn't try to fake one.
-
-   A NOTE ON WHAT'S GENUINELY NOT POSSIBLE HERE: a few reasonable-sounding
-   chat requests hit a real wall, not a "closest approximation" situation —
-   there's no partial CSS/HTML equivalent at all, because they all depend
-   on avoiding a full page navigation while still talking to the server:
-     - Updating only the chat panel when a message is sent, instead of the
-       whole page reloading.
-     - A "typing…" indicator shown WHILE waiting for the model's answer —
-       CSS can only react to a state that already exists; it can't react to
-       an in-flight network request it has no way to observe.
-     - The sent message animating up into place, or the incoming answer
-       sliding in, as separate events from the page simply finishing loading.
-   Every one of these requires JavaScript (to intercept the form, fetch()
-   in the background, and update the DOM without navigating) — there's no
-   partial-credit pure-CSS version, unlike the other mechanisms above.
    ========================================================================== */
 
 /* ---------- Design tokens ---------- */
@@ -127,7 +120,7 @@
   /* Kept compact on purpose: the whole app is locked to one viewport with
      no page scroll (see "NO-SCROLL APP SHELL" below), so every strip has
      to earn its vertical space. */
-  --card-h: 165px;
+  --card-h: 176px;
   --grid-gap: 12px;
   --strip-pad: var(--space-5) var(--space-5) var(--space-4);
 }
@@ -328,15 +321,40 @@ input { font: inherit; color: inherit; }
 }
 .faq-answer p { font-size: .85rem; line-height: 1.55; color: var(--ink-700); }
 
-.question-strip__chat { display: flex; flex-direction: column; margin-top: auto; }
+.question-strip__chat { position: relative; display: flex; flex-direction: column; flex: 1; min-height: 0; margin-top: auto; }
 
-/* Rebuilt as a plain flex column with a max-height collapse — simpler and
-   more robust than an earlier version's CSS-grid 0fr trick, which could
-   leave a sliver of content visible/clickable when "closed" in some
-   browsers. The header (with the return-to-FAQ button) is now a normal,
-   in-flow sibling ABOVE .chat-log rather than absolutely positioned over
-   it, so it can never overlap or intercept clicks meant for the log below
-   it, and it never scrolls out of view — only .chat-log itself scrolls. */
+/* The return-to-FAQ button is a sibling of .chat-panel, not nested inside
+   it (see the HTML comment above it) — it fades in/out on the exact same
+   trigger as the panel below, so the two appear together, but it's its
+   own independent element floating above the panel rather than part of
+   its box or its scrolling content. */
+.return-to-faq {
+  position: absolute;
+  top: 0; right: 0;
+  z-index: 2;
+  width: 30px; height: 30px;
+  opacity: 0;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  background: var(--green-050);
+  color: var(--green-700);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: opacity .25s var(--ease), background .2s var(--ease);
+}
+.question-strip:has(#chat-input:focus, #mode-chat:checked) .return-to-faq {
+  opacity: 1;
+  pointer-events: auto;
+}
+.return-to-faq:hover { background: var(--green-100); }
+.return-to-faq:has(.sr-only-input:focus-visible) { outline: 2.5px solid var(--green-600); outline-offset: 2px; }
+
+/* A simple max-height collapse (no CSS-grid 0fr trick — an earlier version
+   of that could leave a sliver of content visible/clickable in some
+   browsers when "closed"). The height when open scales with the viewport
+   instead of a small fixed number, so it actually uses the space available
+   in the strip rather than capping it short. */
 .chat-panel {
   display: flex;
   flex-direction: column;
@@ -345,13 +363,8 @@ input { font: inherit; color: inherit; }
   transition: max-height .35s var(--ease);
 }
 .question-strip:has(#chat-input:focus, #mode-chat:checked) .chat-panel {
-  max-height: 750px;
-}
-.chat-panel__header {
-  display: flex;
-  justify-content: flex-end;
-  flex-shrink: 0;
-  padding-bottom: var(--space-2);
+  max-height: min(70vh, 900px);
+  padding-top: 42px; /* clearance so the floating return-to-faq button above never overlaps the first message */
 }
 .chat-log {
   flex: 1;
@@ -383,18 +396,33 @@ input { font: inherit; color: inherit; }
   align-self: flex-end;
 }
 
-.return-to-faq {
-  width: 30px; height: 30px;
-  display: grid;
-  place-items: center;
-  background: var(--green-050);
-  color: var(--green-700);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background .2s var(--ease);
+/* Bubbles inserted by chat.js get this class for a brief slide-up-and-fade
+   entrance instead of just appearing — the one animation pure CSS truly
+   cannot trigger on its own, since it has to happen at the moment JS
+   inserts a new element. Bubbles present in the initial HTML (the static
+   greeting, or history restored on load) never get this class, so the
+   page doesn't animate on first paint. */
+@keyframes bubble-enter {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-.return-to-faq:hover { background: var(--green-100); }
-.return-to-faq:has(.sr-only-input:focus-visible) { outline: 2.5px solid var(--green-600); outline-offset: 2px; }
+.chat-bubble--enter { animation: bubble-enter .3s var(--ease); }
+
+/* Shown by chat.js while waiting for the model's answer. */
+.chat-bubble--typing { display: flex; align-items: center; gap: 5px; padding-block: 14px; }
+.typing-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: .55;
+  animation: typing-bounce 1.1s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) { animation-delay: .15s; }
+.typing-dot:nth-child(3) { animation-delay: .3s; }
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: .45; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
 
 .chat-form {
   display: flex;

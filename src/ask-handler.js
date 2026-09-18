@@ -2,16 +2,19 @@
  * src/ask-handler.js
  * ----------------------------------------------------------------------
  * Handles POST /api/ask — the target of the chat <form> in index.html.
+ * Responds in one of two ways, chosen by the request's Accept header:
  *
- * THE OLD BUG THIS FIXES: this used to respond to the POST directly with
- * the rendered HTML page. That meant the browser's "current page" was
- * itself the result of a POST — so refreshing it made the browser
- * resubmit that same POST, asking the same question again. This is a
- * well-known class of bug with a well-known fix: Post/Redirect/Get.
- * Instead of returning HTML here, this handler saves the new answer and
- * responds with an HTTP redirect to GET /chat. The browser then loads
- * /chat with a normal GET, and *that* is what refreshing reloads — safe,
- * because GET requests aren't resubmitted. See src/chat-page-handler.js.
+ * - Accept: application/json (sent by public/chat.js's fetch() call) ->
+ *   a small { answer } JSON response. This is the normal path for any
+ *   visitor with JavaScript enabled.
+ *
+ * - Anything else (a plain HTML form submit — the no-JS fallback) -> an
+ *   HTTP redirect to GET /chat. THE OLD BUG THIS FIXES: this used to
+ *   respond to the POST directly with the rendered HTML page, which
+ *   meant the browser's "current page" was itself the result of a
+ *   POST — refreshing it resubmitted the same question. Post/Redirect/
+ *   Get fixes that: GET /chat is what refreshing reloads, and GETs
+ *   aren't resubmitted. See src/chat-page-handler.js.
  *
  * MULTI-TURN CONTEXT: the visitor's session id (a cookie — see
  * src/session.js) is used to look up their stored conversation so far.
@@ -32,6 +35,8 @@ const MODEL = "@cf/meta/llama-3.1-8b-instruct-fast";
 const MAX_QUESTION_LENGTH = 400;
 
 export async function handleAsk(request, env, ctx) {
+  const wantsJson = (request.headers.get("Accept") || "").includes("application/json");
+
   if (request.method === "GET") {
     // A stray GET (e.g. someone bookmarking /api/ask) just goes home.
     return Response.redirect(new URL("/", request.url), 303);
@@ -45,11 +50,15 @@ export async function handleAsk(request, env, ctx) {
     const formData = await request.formData();
     question = String(formData.get("question") || "").trim();
   } catch {
-    return Response.redirect(new URL("/", request.url), 303);
+    return wantsJson
+      ? jsonResponse({ error: "Malformed request" }, 400)
+      : Response.redirect(new URL("/", request.url), 303);
   }
 
   if (!question) {
-    return Response.redirect(new URL("/", request.url), 303);
+    return wantsJson
+      ? jsonResponse({ error: "Question was empty" }, 400)
+      : Response.redirect(new URL("/", request.url), 303);
   }
   if (question.length > MAX_QUESTION_LENGTH) {
     question = question.slice(0, MAX_QUESTION_LENGTH);
@@ -67,10 +76,23 @@ export async function handleAsk(request, env, ctx) {
 
   await saveHistory(env, sessionId, existing);
 
+  if (wantsJson) {
+    const res = jsonResponse({ answer });
+    if (setCookie) res.headers.append("Set-Cookie", setCookie);
+    return res;
+  }
+
   const redirectUrl = new URL("/chat#chat-bottom", request.url);
   const res = new Response(null, { status: 303, headers: { Location: redirectUrl.toString() } });
   if (setCookie) res.headers.append("Set-Cookie", setCookie);
   return res;
+}
+
+function jsonResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
 }
 
 async function getAnswer(env, question, historyMessages) {

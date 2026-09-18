@@ -145,22 +145,27 @@
 
       <!--
         #mode-chat has no visible control of its own — a person never clicks it
-        directly. It exists purely so the Cloudflare Worker can mark it
-        `checked` when it re-renders this page after answering a question,
-        which keeps the chat panel open after a full-page form submit
-        (see README "How the no-JS chat state works").
+        directly. It's the CSS trigger for chat mode: real (not scripted)
+        HTML/CSS still decides FAQ-vs-chat visibility, and the "return to
+        FAQ" button below (chat.js never touches either). The Cloudflare
+        Worker marks it `checked` when it re-renders this page as a no-JS
+        fallback after answering a question (see README "How the chat
+        works" and public/chat.js's header comment for the JS-enabled path).
       -->
       <input type="radio" name="chat-mode" id="mode-chat" class="sr-only-input" tabindex="-1" aria-hidden="true">
 
-      <div class="chat-panel">
-        <div class="chat-panel__header">
-          <label class="return-to-faq" aria-label="Return to FAQ">
-            <input type="radio" name="chat-mode" id="mode-faq" class="sr-only-input">
-            <svg width="16" height="16"><use href="#icon-arrow-up"/></svg>
-          </label>
-        </div>
+      <!--
+        Deliberately a sibling of .chat-panel, not nested inside it — it
+        fades in/out together with the panel (same CSS trigger) but is its
+        own independent element, positioned to float above the panel.
+      -->
+      <label class="return-to-faq" aria-label="Return to FAQ">
+        <input type="radio" name="chat-mode" id="mode-faq" class="sr-only-input">
+        <svg width="16" height="16"><use href="#icon-arrow-up"/></svg>
+      </label>
 
-        <div class="chat-log" id="chat-log">
+      <div class="chat-panel">
+        <div class="chat-log" id="chat-log" aria-live="polite">
           <div class="chat-bubble chat-bubble--assistant">
             <p>Hi. Ask me anything, and I'll answer right away.</p>
           </div>
@@ -690,5 +695,15 @@
   </div>
 
 </div>
+
+<!--
+  The ONLY JavaScript on this entire site, and only for this one
+  interaction — every other feature (FAQ, filtering, project detail
+  view) is pure HTML/CSS, see styles.css. `defer` keeps it from
+  blocking rendering; see public/chat.js for exactly what it does and
+  why it's needed. If this file fails to load or JS is disabled, the
+  chat form still works via a full page submit — see README.md.
+-->
+<script src="/chat.js" defer></script>
 </body>
 </html>

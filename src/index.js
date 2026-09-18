@@ -17,6 +17,7 @@
 
 import { handleAsk } from "./ask-handler.js";
 import { handleChatPage } from "./chat-page-handler.js";
+import { handleHistory } from "./history-handler.js";
 import { handleScheduled } from "./scheduled.js";
 
 export default {
@@ -25,6 +26,9 @@ export default {
 
     if (url.pathname === "/api/ask") {
       return handleAsk(request, env, ctx);
+    }
+    if (url.pathname === "/api/history") {
+      return handleHistory(request, env);
     }
     if (url.pathname === "/chat") {
       return handleChatPage(request, env);
