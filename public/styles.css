@@ -321,7 +321,7 @@ input { font: inherit; color: inherit; }
 }
 .faq-answer p { font-size: .85rem; line-height: 1.55; color: var(--ink-700); }
 
-.question-strip__chat { position: relative; display: flex; flex-direction: column; flex: 1; min-height: 0; margin-top: auto; }
+.question-strip__chat { position: relative; display: flex; flex-direction: column; flex: 1; min-height: 0; gap: var(--space-3); }
 
 /* The return-to-FAQ button is a sibling of .chat-panel, not nested inside
    it (see the HTML comment above it) — it fades in/out on the exact same
@@ -350,20 +350,24 @@ input { font: inherit; color: inherit; }
 .return-to-faq:hover { background: var(--green-100); }
 .return-to-faq:has(.sr-only-input:focus-visible) { outline: 2.5px solid var(--green-600); outline-offset: 2px; }
 
-/* A simple max-height collapse (no CSS-grid 0fr trick — an earlier version
-   of that could leave a sliver of content visible/clickable in some
-   browsers when "closed"). The height when open scales with the viewport
-   instead of a small fixed number, so it actually uses the space available
-   in the strip rather than capping it short. */
+/* Uses flex-grow (not a max-height cap) to expand, so it genuinely fills
+   whatever vertical space is available in the strip — like the very first
+   version of this mechanism did — rather than stopping at an arbitrary
+   fixed height. flex-basis:0 + flex-grow:0 + min-height:0 collapses it to
+   a true zero height when inactive (overflow:hidden keeps its content
+   from being visible or clickable in that state). */
 .chat-panel {
   display: flex;
   flex-direction: column;
-  max-height: 0;
+  flex: 0 0 0;
+  min-height: 0;
   overflow: hidden;
-  transition: max-height .35s var(--ease);
+  opacity: 0;
+  transition: flex-grow .35s var(--ease), opacity .25s var(--ease);
 }
 .question-strip:has(#chat-input:focus, #mode-chat:checked) .chat-panel {
-  max-height: min(70vh, 900px);
+  flex: 1 1 0;
+  opacity: 1;
   padding-top: 42px; /* clearance so the floating return-to-faq button above never overlaps the first message */
 }
 .chat-log {
@@ -428,7 +432,7 @@ input { font: inherit; color: inherit; }
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  margin-top: var(--space-4);
+  margin-top: auto; /* always pins to the bottom of .question-strip__chat, in both FAQ and chat mode — the actual fix for the "chat bar isn't at the bottom" bug */
   background: var(--silver-050);
   border: 1.4px solid var(--border);
   border-radius: var(--radius-pill);
