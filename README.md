@@ -60,9 +60,14 @@ genuinely impossible in pure CSS/HTML, not just inconvenient: sending
 a message without reloading the whole page, showing a "typing…"
 indicator while the model is still working (CSS can't react to an
 in-flight request it has no way to observe), animating a new message
-into place as its own event, and keeping focus in the input after
-sending. See the comment at the top of that file for the full
-reasoning.
+into place as its own event, growing the input box as you type more
+than one line, and keeping focus in the input after sending. It's also
+what keeps the chat panel open once you've opened it, regardless of
+what you click inside it (a message bubble, empty space) — only the
+return-to-FAQ button closes it — since that needed a real, persistent
+bit of state (a checked radio) that only JS can set outside of a full
+page reload. See the comment at the top of that file for the full
+reasoning on all of these.
 
 **Progressive enhancement, not a hard dependency:** the chat `<form>`
 still has a real `action="/api/ask" method="POST"` and works

@@ -2,8 +2,9 @@
    Nora Callahan — Data Analyst Portfolio
    Pure HTML/CSS, with ONE exception: public/chat.js, a small, isolated
    script that enhances the chat form only (async sending, a typing
-   indicator, message animations, persistent input focus — see that
-   file's header comment for exactly why those specifically need it).
+   indicator, message animations, an auto-growing input, keeping the
+   panel open once opened, persistent input focus — see that file's
+   header comment for exactly why those specifically need it).
    Every other feature on this page — the FAQ accordion, the FAQ<->chat
    visibility toggle, category filtering, the project detail view — has
    no JavaScript involved at all, and the chat form itself still works
@@ -27,20 +28,23 @@
                             by .faq-list below for why) — this one stays
                             pure CSS/HTML per its own scope, so that
                             limitation stands.
-   2. FAQ <-> Chat panel -> .question-strip:has(#chat-input:focus, #mode-chat:checked),
-                            entirely CSS/HTML, not scripted. #chat-input:focus
-                            covers the "as you click into the field" preview
-                            (and chat.js calling .focus() after sending keeps
-                            it true for as long as you're actively chatting).
-                            #mode-chat:checked covers the persistent state
-                            for visitors without JS, set by the Worker when
-                            it re-renders the page as a fallback (see
-                            src/render.js). The return-to-FAQ button is a
-                            sibling of .chat-panel, not nested inside it —
-                            see the HTML comment above it — so the two fade
-                            in together but are independent elements; it
-                            floats above the panel rather than scrolling
-                            with its content.
+   2. FAQ <-> Chat panel -> .question-strip:has(#chat-input:focus, #mode-chat:checked).
+                            The *visibility rule itself* is plain CSS/HTML,
+                            not scripted — but staying open regardless of
+                            what you click inside it needs one line of JS
+                            (chat.js checks #mode-chat the moment the input
+                            is first focused) because that's the only real
+                            "state" a checkbox/radio can hold across clicks;
+                            #chat-input:focus alone would close the panel
+                            the instant focus left the field for any reason,
+                            e.g. clicking a message bubble. #mode-chat:checked
+                            also covers the no-JS fallback, set by the Worker
+                            when it re-renders the page (see src/render.js).
+                            The return-to-FAQ button is a sibling of
+                            .chat-panel, not nested inside it — see the HTML
+                            comment above it — so the two fade in together
+                            but are independent elements; it floats above
+                            the panel rather than scrolling with its content.
    3. Category filter    -> .app:has(#filter-*:checked) toggles visibility of
                             non-matching .project-card elements and highlights
                             the matching .tag. A dedicated, always-tabbable
@@ -123,6 +127,7 @@
   --card-h: 176px;
   --grid-gap: 12px;
   --strip-pad: var(--space-5) var(--space-5) var(--space-4);
+  --chat-input-max-h: 132px; /* ~6 lines before the textarea scrolls internally — see chat.js */
 }
 
 /* ---------- Reset ---------- */
@@ -430,12 +435,12 @@ input { font: inherit; color: inherit; }
 
 .chat-form {
   display: flex;
-  align-items: center;
+  align-items: flex-end; /* keeps the send button pinned to the bottom edge as the textarea grows upward */
   gap: var(--space-2);
   margin-top: auto; /* always pins to the bottom of .question-strip__chat, in both FAQ and chat mode — the actual fix for the "chat bar isn't at the bottom" bug */
   background: var(--silver-050);
   border: 1.4px solid var(--border);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-lg); /* a full pill looks odd once this grows past one line */
   padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
   flex-shrink: 0;
   transition: border-color .2s var(--ease), box-shadow .2s var(--ease);
@@ -447,12 +452,28 @@ input { font: inherit; color: inherit; }
   border-color: var(--green-600);
   box-shadow: 0 0 0 3px var(--green-100);
 }
-.chat-form input[type="text"] {
+/*
+  A <textarea>, not a single-line <input>, so it can grow with content —
+  public/chat.js resizes it on every keystroke (resetting height to "auto"
+  then reading scrollHeight is the standard technique; there's no reliable
+  CSS-only equivalent across browsers yet). It's capped at ~6 lines
+  (--chat-input-max-h below) and scrolls internally past that rather than
+  growing forever. Enter sends the message and Shift+Enter inserts a
+  newline (also handled in chat.js) — WITHOUT JavaScript, a plain
+  <textarea>'s native behavior is Enter always inserts a newline, so the
+  send button is the fallback way to submit in that case.
+*/
+.chat-form textarea {
   flex: 1; min-width: 0;
+  resize: none;
   border: none; background: transparent; outline: none;
-  font-size: .92rem; color: var(--ink-900);
+  font: inherit;
+  font-size: .92rem; line-height: 1.45; color: var(--ink-900);
+  padding: 7px 0;
+  max-height: var(--chat-input-max-h);
+  overflow-y: auto;
 }
-.chat-form input[type="text"]::placeholder { color: var(--ink-300); }
+.chat-form textarea::placeholder { color: var(--ink-300); }
 .chat-send {
   flex-shrink: 0;
   width: 38px; height: 38px;
