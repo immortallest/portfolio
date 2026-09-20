@@ -934,6 +934,22 @@ input { font: inherit; color: inherit; }
   .question-strip { border-right: none; border-bottom: 1px solid var(--border); }
   .card-strip { transform: none !important; }
 
+  /* BUG FIX: the desktop chat-panel expansion (flex-grow filling
+     .question-strip__chat) only works because .question-strip has a
+     bounded height there (from the grid layout). Here .strip is height:
+     auto (natural page scroll instead), so there's no "available space"
+     for flex-grow to distribute — the panel's flex-grow was doing
+     nothing, which is why tapping the chat bar moved the return-to-FAQ
+     button up but opened no visible space underneath it. Mobile instead
+     grows the panel to fit its own content, capped so a long
+     conversation scrolls internally rather than pushing the return
+     button (and everything below it) off past the bottom of the screen. */
+  .question-strip__chat { flex: initial; }
+  .question-strip:has(#chat-input:focus, #mode-chat:checked) .chat-panel {
+    flex: 0 1 auto;
+    max-height: 60vh;
+  }
+
   .card-grid { max-height: none; overflow-y: visible; }
 
   .detail-panels { grid-column: unset; }
@@ -970,3 +986,68 @@ input { font: inherit; color: inherit; }
   .filter-group { gap: 6px; }
   .profile-name { font-size: 1.3rem; }
 }
+
+/* ==========================================================================
+   VISIT ANALYTICS — pure CSS, no JavaScript
+   --------------------------------------------------------------------------
+   The technique: a CSS background-image only gets fetched by the browser
+   once the rule it's declared in actually matches a rendered element —
+   browsers don't pre-fetch every url() in the stylesheet "just in case",
+   only ones a matching, rendered element actually needs. So a rule that
+   only matches in a specific STATE (an [open] <details>, a :checked
+   card, a clicked :focus link) becomes a lightweight, native "did this
+   happen" signal: the state occurring IS the browser making a real HTTP
+   request, to a path this site's own Worker handles and logs (see
+   src/track-handler.js) — no different in principle from how any
+   analytics snippet observes an event, just triggered by CSS state
+   instead of a script call. The response is empty (204 No Content) and
+   marked no-store — nothing is meant to visibly render, and every match
+   should count as a fresh request rather than being served from cache.
+
+   HONEST LIMITATION: if the exact same element re-enters the exact same
+   state more than once within one page view without a reload in between
+   (e.g. re-selecting a project you already viewed this visit), the
+   browser MAY serve that repeat from its in-memory resource cache rather
+   than issuing a new request, even with no-store on the response — this
+   is a per-browser implementation detail CSS has no way to force past.
+   In practice this means: reliably captures "did this happen at least
+   once this visit", not a precise repeat-click counter within one visit.
+   ========================================================================== */
+
+.faq-item[data-track="faq-1"][open] { background-image: url('/t/faq-1'); }
+.faq-item[data-track="faq-2"][open] { background-image: url('/t/faq-2'); }
+.faq-item[data-track="faq-3"][open] { background-image: url('/t/faq-3'); }
+.faq-item[data-track="faq-4"][open] { background-image: url('/t/faq-4'); }
+.faq-item[data-track="faq-5"][open] { background-image: url('/t/faq-5'); }
+
+.project-card:has(#project-1:checked) { background-image: url('/t/project-1'); }
+.project-card:has(#project-2:checked) { background-image: url('/t/project-2'); }
+.project-card:has(#project-3:checked) { background-image: url('/t/project-3'); }
+.project-card:has(#project-4:checked) { background-image: url('/t/project-4'); }
+.project-card:has(#project-5:checked) { background-image: url('/t/project-5'); }
+.project-card:has(#project-6:checked) { background-image: url('/t/project-6'); }
+.project-card:has(#project-7:checked) { background-image: url('/t/project-7'); }
+.project-card:has(#project-8:checked) { background-image: url('/t/project-8'); }
+
+a[data-track="dl-1-raw"]:focus { background-image: url('/t/dl-1-raw'); }
+a[data-track="dl-1-processed"]:focus { background-image: url('/t/dl-1-processed'); }
+a[data-track="dl-2-raw"]:focus { background-image: url('/t/dl-2-raw'); }
+a[data-track="dl-2-processed"]:focus { background-image: url('/t/dl-2-processed'); }
+a[data-track="dl-3-raw"]:focus { background-image: url('/t/dl-3-raw'); }
+a[data-track="dl-3-processed"]:focus { background-image: url('/t/dl-3-processed'); }
+a[data-track="dl-4-raw"]:focus { background-image: url('/t/dl-4-raw'); }
+a[data-track="dl-4-processed"]:focus { background-image: url('/t/dl-4-processed'); }
+a[data-track="dl-5-raw"]:focus { background-image: url('/t/dl-5-raw'); }
+a[data-track="dl-5-processed"]:focus { background-image: url('/t/dl-5-processed'); }
+a[data-track="dl-6-raw"]:focus { background-image: url('/t/dl-6-raw'); }
+a[data-track="dl-6-processed"]:focus { background-image: url('/t/dl-6-processed'); }
+a[data-track="dl-7-raw"]:focus { background-image: url('/t/dl-7-raw'); }
+a[data-track="dl-7-processed"]:focus { background-image: url('/t/dl-7-processed'); }
+a[data-track="dl-8-raw"]:focus { background-image: url('/t/dl-8-raw'); }
+a[data-track="dl-8-processed"]:focus { background-image: url('/t/dl-8-processed'); }
+
+a[data-track="contact-telegram"]:focus { background-image: url('/t/contact-telegram'); }
+a[data-track="contact-whatsapp"]:focus { background-image: url('/t/contact-whatsapp'); }
+a[data-track="contact-x"]:focus { background-image: url('/t/contact-x'); }
+a[data-track="contact-linkedin"]:focus { background-image: url('/t/contact-linkedin'); }
+a[data-track="contact-email"]:focus { background-image: url('/t/contact-email'); }

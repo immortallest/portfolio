@@ -8,7 +8,9 @@
  * WITHOUT invoking this fetch handler at all — that's the default
  * `run_worker_first = false` behaviour. This code only runs for
  * requests that don't match a static file: the chat form's
- * POST /api/ask, and the GET /chat page it redirects to.
+ * POST /api/ask, the GET /chat page it redirects to, and GET /t/:slug
+ * (the CSS-triggered click-analytics pixels — see styles.css's big
+ * comment on that technique and src/track-handler.js).
  *
  * `scheduled()` runs on the Cron Trigger in wrangler.toml — see
  * src/scheduled.js for what it does and why.
@@ -18,6 +20,7 @@
 import { handleAsk } from "./ask-handler.js";
 import { handleChatPage } from "./chat-page-handler.js";
 import { handleHistory } from "./history-handler.js";
+import { handleTrack } from "./track-handler.js";
 import { handleScheduled } from "./scheduled.js";
 
 export default {
@@ -32,6 +35,9 @@ export default {
     }
     if (url.pathname === "/chat") {
       return handleChatPage(request, env);
+    }
+    if (url.pathname.startsWith("/t/")) {
+      return handleTrack(request, env, url.pathname.slice(3));
     }
 
     // Anything else reaching the Worker didn't match a static asset —

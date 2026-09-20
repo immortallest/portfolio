@@ -24,7 +24,7 @@
  */
 
 import { buildSystemPrompt } from "./context.js";
-import { getOrCreateSessionId, getHistory, saveHistory, MAX_MESSAGES_FOR_MODEL } from "./session.js";
+import { getOrCreateSessionId, getHistory, saveHistory, getClientIp, MAX_MESSAGES_FOR_MODEL } from "./session.js";
 
 // A small, current (as of writing), non-deprecated Workers AI instruct
 // model — a good fit for short FAQ-style answers. Swap this for any
@@ -73,6 +73,7 @@ export async function handleAsk(request, env, ctx) {
   existing.messages.push({ role: "user", content: question, time: now });
   existing.messages.push({ role: "assistant", content: answer, time: now });
   existing.lastActive = now;
+  existing.ip = getClientIp(request); // so the scheduled job can merge in this visitor's click data too
 
   await saveHistory(env, sessionId, existing);
 

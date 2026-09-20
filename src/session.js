@@ -22,16 +22,26 @@
  * Telegram — happens once a conversation has gone quiet for a while (see
  * src/scheduled.js), since there is no way for a server to know the exact
  * instant a tab was closed without JavaScript running in that tab.
+ *
+ * This file also holds the (separate, simpler) storage for click
+ * analytics — see src/track-handler.js and src/scheduled.js. Chat
+ * sessions are keyed by the random cookie above (so two visitors who
+ * happen to share an IP, e.g. behind the same office network, never get
+ * their conversations mixed together); click tracking is keyed by IP
+ * directly, per the feature request, which is a coarser but acceptable
+ * granularity for "what got clicked" style analytics.
  * ----------------------------------------------------------------------
  */
 
 const COOKIE_NAME = "sid";
 export const KV_PREFIX = "session:";
+export const VISIT_PREFIX = "visit:";
 
-// Hard backstop only. The real cleanup trigger is inactivity, handled by
-// the scheduled job in src/scheduled.js — this just guarantees KV won't
-// hold a session forever if that job is ever disabled.
-const KV_TTL_SECONDS = 3600; // 1 hour
+// Hard backstops only. The real cleanup trigger is inactivity, handled by
+// the scheduled job in src/scheduled.js — these just guarantee KV won't
+// hold something forever if that job is ever disabled.
+const KV_TTL_SECONDS = 3600; // 1 hour, chat sessions
+const VISIT_TTL_SECONDS = 1800; // 30 min, click-tracking visits (see src/scheduled.js — reported sooner than chat)
 
 // How many of the most recent messages get sent to the model as
 // conversation context. The full history is still stored/shown/reported
@@ -71,7 +81,18 @@ export function getOrCreateSessionId(request) {
   return { sessionId, setCookie };
 }
 
-/** Fetches { messages: [{role, content, time}], lastActive } for a session, or null. */
+/**
+ * The visitor's IP address, via the header Cloudflare's network sets on
+ * every request. This is what "an identifier per visitor" actually means
+ * on the web — there is no way for a website to read anything
+ * hardware-level like a device serial number; browsers never expose
+ * that to a page, with or without JavaScript.
+ */
+export function getClientIp(request) {
+  return request.headers.get("CF-Connecting-IP") || "unknown";
+}
+
+/** Fetches { messages: [{role, content, time}], lastActive, ip } for a session, or null. */
 export async function getHistory(env, sessionId) {
   if (!env.CHAT_SESSIONS || !sessionId) return null;
   const raw = await env.CHAT_SESSIONS.get(KV_PREFIX + sessionId);
@@ -97,4 +118,32 @@ export async function saveHistory(env, sessionId, history) {
 export async function deleteHistory(env, sessionId) {
   if (!env.CHAT_SESSIONS || !sessionId) return;
   await env.CHAT_SESSIONS.delete(KV_PREFIX + sessionId);
+}
+
+/** Fetches { clicks: [{slug, time}], lastActive, firstSeen } for a visitor's IP, or null. */
+export async function getVisit(env, ip) {
+  if (!env.CHAT_SESSIONS || !ip) return null;
+  const raw = await env.CHAT_SESSIONS.get(VISIT_PREFIX + ip);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed.clicks)) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+/** Persists a visitor's click log, refreshing its TTL. */
+export async function saveVisit(env, ip, visit) {
+  if (!env.CHAT_SESSIONS || !ip) return;
+  await env.CHAT_SESSIONS.put(VISIT_PREFIX + ip, JSON.stringify(visit), {
+    expirationTtl: VISIT_TTL_SECONDS,
+  });
+}
+
+/** Deletes a visitor's click log immediately. */
+export async function deleteVisit(env, ip) {
+  if (!env.CHAT_SESSIONS || !ip) return;
+  await env.CHAT_SESSIONS.delete(VISIT_PREFIX + ip);
 }

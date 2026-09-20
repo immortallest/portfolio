@@ -1,11 +1,10 @@
 /**
  * src/telegram.js
  * ----------------------------------------------------------------------
- * Sends ONE digest message per conversation — the whole thing, in
- * order — rather than one message per question. It's called from
- * src/scheduled.js once a conversation has gone quiet for a while (see
- * that file for exactly what "gone quiet" means and why), right before
- * that conversation's stored history is deleted.
+ * Sends ONE report per visitor when their activity is done — the full
+ * chat transcript if they used the chat, a summary of what they clicked
+ * if they didn't, or both together if they did both (src/scheduled.js
+ * decides which case applies and merges the data before calling this).
  *
  * Setup (see README.md for the full walkthrough):
  *   1. Message @BotFather on Telegram, run /newbot, copy the token.
@@ -16,28 +15,51 @@
  *      (Worker -> Settings -> Variables and Secrets).
  *
  * This is intentionally fire-and-forget: a Telegram outage should never
- * block the cleanup job from still deleting expired sessions.
+ * block the scheduled job from still deleting expired data.
  * ----------------------------------------------------------------------
  */
 
+import { labelFor } from "./track-labels.js";
+
 const TELEGRAM_MAX_LEN = 3900; // Telegram's real limit is 4096 chars; leaving headroom.
 
-function formatTranscript(messages) {
+function formatChatSection(messages) {
   const lines = messages.map((m) => `${m.role === "user" ? "Visitor" : "Assistant"}: ${m.content}`);
-  let text = lines.join("\n\n");
-  if (text.length > TELEGRAM_MAX_LEN) {
-    text = text.slice(0, TELEGRAM_MAX_LEN) + "\n\n…(truncated — conversation continued)";
-  }
-  return text;
+  return `💬 Chat (${messages.length} messages):\n\n${lines.join("\n\n")}`;
 }
 
-export async function notifyTelegramDigest(env, messages) {
+function formatClicksSection(clicks) {
+  const lines = clicks
+    .slice()
+    .sort((a, b) => a.time - b.time)
+    .map((c) => `• ${labelFor(c.slug)}`);
+  return `🖱 Clicks (${clicks.length}):\n${lines.join("\n")}`;
+}
+
+/**
+ * report: { ip, messages?: [...], clicks?: [...] }
+ * At least one of messages/clicks should be non-empty — callers already
+ * check this before calling, but it's harmless either way.
+ */
+export async function notifyTelegramDigest(env, report) {
   if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return; // not configured — skip silently
-  if (!messages || !messages.length) return;
 
-  const text = `Chat conversation ended (${messages.length} messages):\n\n${formatTranscript(messages)}`;
+  const { ip, messages, clicks } = report;
+  const hasChat = messages && messages.length;
+  const hasClicks = clicks && clicks.length;
+  if (!hasChat && !hasClicks) return;
+
+  const sections = [];
+  sections.push(`Visit report — IP ${ip || "unknown"}${hasChat ? "" : " (no chat used)"}`);
+  if (hasChat) sections.push(formatChatSection(messages));
+  if (hasClicks) sections.push(formatClicksSection(clicks));
+
+  let text = sections.join("\n\n");
+  if (text.length > TELEGRAM_MAX_LEN) {
+    text = text.slice(0, TELEGRAM_MAX_LEN) + "\n\n…(truncated)";
+  }
+
   const url = `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`;
-
   try {
     await fetch(url, {
       method: "POST",
