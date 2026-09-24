@@ -4,7 +4,7 @@
 # Static Assets model, and this config targets that current model:
 # `main` is the Worker's code entry point, and [assets] tells it which
 # folder to serve as the static site. Deploy with `npx wrangler deploy`.
-name = "nora-callahan-portfolio"
+name = "portfolio"
 main = "src/index.js"
 compatibility_date = "2026-09-01"
 
@@ -30,7 +30,7 @@ binding = "AI"
 # then paste the "id" it prints into the line below. See README.md.
 [[kv_namespaces]]
 binding = "CHAT_SESSIONS"
-id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+id = "76c6a6b44f7c4e7d851a46d5dacb29de"
 
 # Cron Trigger — runs src/scheduled.js every 2 minutes to find chat
 # conversations and click-only visits that have gone quiet, send a
