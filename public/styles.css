@@ -934,20 +934,37 @@ input { font: inherit; color: inherit; }
   .question-strip { border-right: none; border-bottom: 1px solid var(--border); }
   .card-strip { transform: none !important; }
 
-  /* BUG FIX: the desktop chat-panel expansion (flex-grow filling
-     .question-strip__chat) only works because .question-strip has a
-     bounded height there (from the grid layout). Here .strip is height:
-     auto (natural page scroll instead), so there's no "available space"
-     for flex-grow to distribute — the panel's flex-grow was doing
-     nothing, which is why tapping the chat bar moved the return-to-FAQ
-     button up but opened no visible space underneath it. Mobile instead
-     grows the panel to fit its own content, capped so a long
-     conversation scrolls internally rather than pushing the return
-     button (and everything below it) off past the bottom of the screen. */
-  .question-strip__chat { flex: initial; }
+  /* MOBILE CHAT PANEL — deliberately uses NO flex sizing at all.
+     The desktop version (flex-grow filling a bounded-height strip)
+     can't work here: on mobile the strip has no bounded height (the page
+     scrolls naturally instead), so there's no free space to grow into.
+     An earlier mobile fix still sized .chat-log with `flex: 1` (a 0%
+     flex-basis) inside an auto-height column — which Chromium resolves
+     as "size to content", but WebKit/iOS Safari resolves as zero,
+     collapsing the log to nothing: the return-to-FAQ button appeared
+     (42px of padding opened) but there was no room for any messages.
+     So on mobile the panel is a plain block, and both the panel and the
+     log are sized with ordinary max-height / min-height instead, which
+     every engine agrees on. The log gets a min-height so tapping the
+     chat bar visibly OPENS a chat area (like a messenger) rather than
+     only growing as messages arrive, and a max-height past which it
+     scrolls internally instead of pushing the input bar off-screen. */
+  .question-strip__chat { flex: none; }
+  .chat-panel {
+    display: block;
+    flex: none;
+    max-height: 0;
+    transition: max-height .35s var(--ease), opacity .25s var(--ease);
+  }
   .question-strip:has(#chat-input:focus, #mode-chat:checked) .chat-panel {
-    flex: 0 1 auto;
-    max-height: 60vh;
+    flex: none;
+    max-height: 80vh; /* only a ceiling for the open animation; .chat-log below sets the real bounds */
+  }
+  .chat-log {
+    display: flex;
+    flex: none;
+    min-height: min(36vh, 300px);
+    max-height: 56vh;
   }
 
   .card-grid { max-height: none; overflow-y: visible; }
